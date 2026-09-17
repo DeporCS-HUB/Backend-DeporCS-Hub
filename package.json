@@ -1,0 +1,17 @@
+{
+  "name": "backend-deporcs-hub",
+  "version": "1.0.0",
+  "description": "Backend service for DeporCS Hub",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "echo 'No build step required for Node.js backend'"
+  },
+  "dependencies": {
+    "express": "^4.21.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  }
+}
