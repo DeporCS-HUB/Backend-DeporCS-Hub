@@ -29,7 +29,7 @@ The Dockerfile builds/tests with Java 21 and runs the JAR as an unprivileged use
 
 ## Database setup — manual, development first
 
-`supabase/migrations/202610080001_core.sql` creates `profiles`, `programs`, `tasks`, `finances`, `inventory`, constraints, indexes, RLS, an Auth profile trigger, and a database dashboard RPC. Supabase owns `auth.users`; there is no public password column. Existing Auth accounts are backfilled with the **member** role.
+`supabase/migrations/202610080001_core.sql` creates `profiles`, `programs`, `tasks`, `finances`, `inventory`, constraints, indexes, RLS, an Auth profile trigger, and a database dashboard RPC. Supabase owns `auth.users`; there is no public password column. Existing Auth accounts are backfilled as **inactive members**. New Auth accounts are also inactive until approved by a trusted operator; public self-registration cannot grant department data access.
 
 1. Create an isolated development Supabase project or branch.
 2. Inspect existing tables, foreign keys, grants, functions, policies, and Auth accounts. This migration intentionally fails when names conflict; it must not silently overwrite an existing schema. Reconcile any legacy public `users`/password schema manually and discontinue its grants after migrating real accounts through Supabase Auth.
@@ -42,8 +42,10 @@ psql "$DEV_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/202610080001_
 4. Create development accounts through Supabase Auth's dashboard or trusted admin workflow. Use a trusted SQL operator to promote **only the intended development account**, for example:
 
 ```sql
-update public.profiles set role = 'staff' where id = '<development-auth-user-uuid>';
+update public.profiles set role = 'staff', active = true where id = '<development-auth-user-uuid>';
 ```
+
+For approved member accounts, set `active = true` while keeping `role = 'member'`. User metadata cannot activate an account.
 
 5. Optionally run `supabase/seed.sql` in development. It requires an active staff/admin profile, inserts clearly marked demo records, and is intentionally not rerunnable without duplicating data. It never seeds passwords or invents real department data.
 6. Configure backend and frontend for that development project, then validate login → dashboard → CRUD → refresh → logout with member and staff accounts.

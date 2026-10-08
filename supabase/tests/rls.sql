@@ -4,6 +4,8 @@ insert into auth.users(id,email,raw_user_meta_data) values
  ('00000000-0000-0000-0000-000000000001','member@example.invalid','{"role":"admin","name":"Member"}'),
  ('00000000-0000-0000-0000-000000000002','staff@example.invalid','{"name":"Staff"}'),
  ('00000000-0000-0000-0000-000000000003','other@example.invalid','{"name":"Other"}');
+do $$begin if exists(select 1 from public.profiles where active) then raise exception 'unapproved account activated automatically';end if;end$$;
+update public.profiles set active=true where id in ('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000003');
 update public.profiles set role='staff' where id='00000000-0000-0000-0000-000000000002';
 -- Metadata cannot grant admin.
 do $$begin if (select role from public.profiles where id='00000000-0000-0000-0000-000000000001')<>'member' then raise exception 'metadata privilege escalation';end if;end$$;

@@ -5,7 +5,7 @@ create table public.profiles (
  id uuid primary key references auth.users(id) on delete cascade,
  name text not null check (length(name) between 1 and 120),
  role text not null default 'member' check (role in ('member','staff','admin')),
- active boolean not null default true,
+ active boolean not null default false,
  created_at timestamptz not null default now()
 );
 create function public.bootstrap_profile() returns trigger language plpgsql security definer set search_path = '' as $$
@@ -15,7 +15,7 @@ begin
 end $$;
 revoke all on function public.bootstrap_profile() from public;
 create trigger depor_auth_profile after insert on auth.users for each row execute function public.bootstrap_profile();
--- Existing auth accounts receive member role; no role from user metadata is trusted.
+-- Existing auth accounts receive inactive member profiles; no role from user metadata is trusted.
 insert into public.profiles(id,name)
 select id,left(coalesce(nullif(raw_user_meta_data->>'name',''),split_part(email,'@',1),'Member'),120) from auth.users;
 create function public.app_role() returns text language sql stable security definer set search_path = '' as $$
