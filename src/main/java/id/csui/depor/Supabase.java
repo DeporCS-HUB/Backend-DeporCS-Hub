@@ -24,7 +24,12 @@ public class Supabase {
    return result==null?com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.nullNode():result;
   } catch(RestClientResponseException e) {
    int s=e.getStatusCode().value();String detail=e.getResponseBodyAsString();
-   if(s==401 || (path.startsWith("/auth/") && (s==400 || s==422))) throw new ApiException(401,"UNAUTHENTICATED","Login atau session tidak valid.");
+   boolean invalidJwt=false;
+   if(s==403 && path.startsWith("/auth/")) {
+    try {JsonNode error=new com.fasterxml.jackson.databind.ObjectMapper().readTree(detail);invalidJwt=error!=null && "bad_jwt".equals(error.path("error_code").asText());}
+    catch(com.fasterxml.jackson.core.JsonProcessingException ignored) { /* Preserve ordinary forbidden responses. */ }
+   }
+   if(s==401 || invalidJwt || (path.startsWith("/auth/") && (s==400 || s==422))) throw new ApiException(401,"UNAUTHENTICATED","Login atau session tidak valid.");
    if(s==403) throw new ApiException(403,"FORBIDDEN","Anda tidak memiliki hak untuk operasi ini.");
    if(s==429) throw new ApiException(429,"RATE_LIMITED","Terlalu banyak percobaan. Coba kembali nanti.");
    if(detail.contains("23505") || (detail.contains("23503") || detail.contains("23001"))) throw new ApiException(409,"CONFLICT","Data duplikat atau masih digunakan oleh data lain.");

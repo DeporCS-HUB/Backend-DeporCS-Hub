@@ -29,9 +29,9 @@ The Dockerfile builds/tests with Java 21 and runs the JAR as an unprivileged use
 
 ## Database setup — manual, development first
 
-`supabase/migrations/202610080001_core.sql` creates `profiles`, `programs`, `tasks`, `finances`, `inventory`, constraints, indexes, RLS, an Auth profile trigger, and a database dashboard RPC. Supabase owns `auth.users`; there is no public password column. Existing Auth accounts are backfilled as **inactive members**. New Auth accounts are also inactive until approved by a trusted operator; public self-registration cannot grant department data access.
+`supabase/migrations/20261008154150_core.sql` creates `profiles`, `programs`, `tasks`, `finances`, `inventory`, constraints, indexes, RLS, an Auth profile trigger, and a database dashboard RPC. Supabase owns `auth.users`; there is no public password column. Existing Auth accounts are backfilled as **inactive members**. New Auth accounts are also inactive until approved by a trusted operator; public self-registration cannot grant department data access.
 
-1. Create an isolated development Supabase project or branch.
+1. Use the user-authorized development project `dajpnhkutkhgxwkjzvpg` on the Free organization. The user explicitly reclassified this ref from protected main to development on 8 October 2026. Do not provision paid branching or upgrade the plan.
 2. Inspect existing tables, foreign keys, grants, functions, policies, and Auth accounts. This migration intentionally fails when names conflict; it must not silently overwrite an existing schema. Reconcile any legacy public `users`/password schema manually and discontinue its grants after migrating real accounts through Supabase Auth.
 3. Apply all migrations in filename order to development using Supabase SQL Editor, or a trusted SQL connection:
 
@@ -99,7 +99,7 @@ mvn verify
 ```
 
 - 31 Spring MockMvc/security tests use a mocked Supabase adapter.
-- 6 adapter tests use a local HTTP server to verify Auth calls, trusted profile roles, inactive/missing profiles, and sanitized upstream errors.
+- 10 adapter tests use a local HTTP server to verify Auth calls, trusted profile roles, inactive/missing profiles, and sanitized upstream errors.
 - `supabase/tests/rls.sql` tests real SQL grants/RLS, ownership, constraints, and >1,000-row aggregation in a rollback transaction. Run only in a disposable development database.
 - `supabase/tests/bootstrap.sql` is a **local PostgreSQL harness** that stubs Auth schema/roles. Never run it on a Supabase project. CI uses PostgreSQL 17 and this harness; it does not validate hosted Supabase Auth.
 
@@ -115,14 +115,29 @@ for test in supabase/tests/rls*.sql; do
 done
 ```
 
-Local implementation validation used PGlite's PostgreSQL runtime with the same harness, migration, and RLS tests. This verifies SQL semantics, not the hosted Supabase service. Live schema inspection, seed execution, login, and CRUD require installed environment settings and development accounts. No hosted Supabase mutation was performed in this implementation session.
+Local implementation validation used PGlite's PostgreSQL runtime with the same harness, migration, and RLS tests. This verifies SQL semantics, not the hosted Supabase service. Live schema inspection, seed execution, login, and CRUD require installed environment settings and development accounts. The two reviewed application migrations were applied to the authorized development project on 8 October 2026. The hosted PostgreSQL RLS suites passed using temporary fixtures and simulated JWT claims, with every fixture rolled back. This is separate from successful hosted Auth login and authenticated HTTP CRUD, which still require verified development accounts.
 
 ## Events and profile settings
 
-`supabase/migrations/202610080002_events_profiles.sql` adds event schedules, program relationships, venue and permit tracking, and an own-profile name update policy. It is additive and must be reviewed/applied after the core migration. The new nonblank profile-name constraint deliberately fails if existing names contain only spaces; inspect and reconcile those records before applying. Both migrations were exercised only on disposable local/CI databases, not on hosted Supabase.
+`supabase/migrations/20261008154204_events_profiles.sql` adds event schedules, program relationships, venue and permit tracking, and an own-profile name update policy. It is additive and must be reviewed/applied after the core migration. The new nonblank profile-name constraint deliberately fails if existing names contain only spaces; inspect and reconcile those records before applying. Both migrations were applied to the authorized hosted development project and exercised by transactional RLS suites there, as well as local PGlite/previous CI. No production deployment or merge was performed.
 
 Event date ranges and statuses are validated by Java and PostgreSQL. Active members can read events; staff/admin can create, edit, and delete them. Event lists sort by start date. Linked events prevent deletion of their program. Permit status is an internal record entered by staff after confirmation from the venue operator; there is no external application, notification, or approval delivery workflow.
 
 Settings persists the caller's display name with a validated DTO. Name changes do not modify Supabase Auth credentials or grant any privileges. `supabase/tests/rls_events_profiles.sql` checks own/other/inactive profile edits, column privileges, event CRUD, dates, anonymous access, and foreign-key protection in a rollback transaction.
 
 Account invitations, attendance/organization structure, role administration UI, external permits, language/theme/notification preferences, attachment uploads, and concurrent-edit conflict detection remain outside this implementation. Team remains a read-only profile directory.
+
+## Hosted development checkpoint
+
+Both migration filenames match the actual Supabase migration versions: `20261008154150_core.sql` and `20261008154204_events_profiles.sql`. Do not run a second copy under an older filename. Internal privileged helpers live in schema `private`; metadata cannot assign roles/activation, and whitespace-only display names receive a valid fallback.
+
+See [development validation](docs/live-development-validation.md) for current evidence and remaining limits. Six application tables have RLS, security advisor has no lints, and public HTTP requests cannot read application data. Performance advisor recommendations remain documented; no extra paid resources or add-ons were enabled.
+
+For a read-only test of hosted reachability and rejection paths, build the backend and set its environment securely, then run:
+
+```sh
+mvn verify
+python scripts/verify-hosted-readiness.py
+```
+
+This script accepts only the authorized development URL, checks anonymous table/RPC denial, starts the backend on loopback, and checks invalid login/token/refresh and Origin handling. It creates no accounts or data and does not test successful login, session rotation, authenticated CRUD/persistence, or logout. Hosted email confirmation remains enabled. Create and verify staff/member Auth accounts through the trusted dashboard/admin flow before positive acceptance testing; activate only their verified UUIDs through a trusted operator.

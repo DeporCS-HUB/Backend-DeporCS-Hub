@@ -1,5 +1,13 @@
 -- Disposable development database only. Fixtures roll back.
 begin;
+do $$begin
+ if exists(select 1 from auth.users) or exists(select 1 from public.profiles)
+ or exists(select 1 from public.programs) or exists(select 1 from public.tasks)
+ or exists(select 1 from public.finances) or exists(select 1 from public.inventory)
+ or exists(select 1 from public.events) then
+  raise exception 'RLS acceptance requires empty development database';
+ end if;
+end$$;
 insert into auth.users(id,email,raw_user_meta_data) values
  ('00000000-0000-0000-0000-000000000001','member@example.invalid','{"name":"Member"}'),
  ('00000000-0000-0000-0000-000000000002','staff@example.invalid','{"name":"Staff"}'),

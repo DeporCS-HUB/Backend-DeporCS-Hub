@@ -1,9 +1,19 @@
 -- Run only against a disposable DEVELOPMENT database. Every fixture rolls back.
 begin;
+do $$begin
+ if exists(select 1 from auth.users) or exists(select 1 from public.profiles)
+ or exists(select 1 from public.programs) or exists(select 1 from public.tasks)
+ or exists(select 1 from public.finances) or exists(select 1 from public.inventory)
+ or exists(select 1 from public.events) then
+  raise exception 'RLS acceptance requires empty development database';
+ end if;
+end$$;
 insert into auth.users(id,email,raw_user_meta_data) values
- ('00000000-0000-0000-0000-000000000001','member@example.invalid','{"role":"admin","name":"Member"}'),
+ ('00000000-0000-0000-0000-000000000001','member@example.invalid','{"role":"admin","active":true,"name":"Member"}'),
  ('00000000-0000-0000-0000-000000000002','staff@example.invalid','{"name":"Staff"}'),
- ('00000000-0000-0000-0000-000000000003','other@example.invalid','{"name":"Other"}');
+ ('00000000-0000-0000-0000-000000000003','other@example.invalid','{"name":"Other"}'),
+ ('00000000-0000-0000-0000-000000000004','fallback@example.invalid','{"name":"   "}');
+do $$begin if (select name from public.profiles where id='00000000-0000-0000-0000-000000000004')<>'fallback' then raise exception 'blank metadata name not normalized';end if;end$$;
 do $$begin if exists(select 1 from public.profiles where active) then raise exception 'unapproved account activated automatically';end if;end$$;
 update public.profiles set active=true where id in ('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000003');
 update public.profiles set role='staff' where id='00000000-0000-0000-0000-000000000002';
@@ -37,7 +47,7 @@ do $$begin
 end$$;
 set local request.jwt.claim.sub='00000000-0000-0000-0000-000000000001';
 do $$begin
- if public.app_role()<>'member' then raise exception 'wrong member role';end if;
+ if private.app_role()<>'member' then raise exception 'wrong member role';end if;
  if (select count(*) from public.programs)<>1 then raise exception 'member cannot read programs';end if;
  begin update public.profiles set role='admin' where id=auth.uid();raise exception 'member changed role';exception when insufficient_privilege then null;end;
  begin insert into public.programs(name,pic,start_date,end_date) values('Unauthorized','Member',current_date,current_date);raise exception 'member created program';exception when insufficient_privilege then null;end;

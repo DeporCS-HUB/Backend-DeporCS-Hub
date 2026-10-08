@@ -1,10 +1,10 @@
 begin;
--- Additive migration; apply after 202610080001_core.sql in development first.
+-- Additive migration; apply after 20261008154150_core.sql in development first.
 alter table public.profiles add constraint profile_name_not_blank check (length(btrim(name)) > 0);
 grant update(name) on public.profiles to authenticated;
 create policy profiles_update_self on public.profiles for update to authenticated
- using (id=auth.uid() and public.app_role() is not null)
- with check (id=auth.uid() and public.app_role() is not null);
+ using (id=auth.uid() and private.app_role() is not null)
+ with check (id=auth.uid() and private.app_role() is not null);
 
 create table public.events (
  id uuid primary key default gen_random_uuid(),
@@ -25,10 +25,10 @@ alter table public.events enable row level security;
 revoke all on public.events from anon,authenticated;
 grant select,insert,delete on public.events to authenticated;
 grant update(name,description,program_id,venue,start_date,end_date,status,permit_status) on public.events to authenticated;
-create policy events_read on public.events for select to authenticated using (public.app_role() is not null);
+create policy events_read on public.events for select to authenticated using (private.app_role() is not null);
 create policy events_insert on public.events for insert to authenticated
- with check (public.app_role() in ('staff','admin') and created_by=auth.uid());
+ with check (private.app_role() in ('staff','admin') and created_by=auth.uid());
 create policy events_update on public.events for update to authenticated
- using (public.app_role() in ('staff','admin')) with check (public.app_role() in ('staff','admin'));
-create policy events_delete on public.events for delete to authenticated using (public.app_role() in ('staff','admin'));
+ using (private.app_role() in ('staff','admin')) with check (private.app_role() in ('staff','admin'));
+create policy events_delete on public.events for delete to authenticated using (private.app_role() in ('staff','admin'));
 commit;

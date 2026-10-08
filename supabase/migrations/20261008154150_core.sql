@@ -1,4 +1,7 @@
 begin;
+create schema private;
+revoke all on schema private from public, anon, authenticated;
+grant usage on schema private to authenticated;
 -- Intentionally fail on conflicting existing tables; inspect and reconcile before applying.
 -- auth.users is managed by Supabase Auth; never create a public password table.
 create table public.profiles (
@@ -8,21 +11,21 @@ create table public.profiles (
  active boolean not null default false,
  created_at timestamptz not null default now()
 );
-create function public.bootstrap_profile() returns trigger language plpgsql security definer set search_path = '' as $$
+create function private.bootstrap_profile() returns trigger language plpgsql security definer set search_path = '' as $$
 begin
- insert into public.profiles(id,name) values(new.id,left(coalesce(nullif(new.raw_user_meta_data->>'name',''),split_part(new.email,'@',1),'Member'),120));
+ insert into public.profiles(id,name) values(new.id,left(coalesce(nullif(btrim(new.raw_user_meta_data->>'name'),''),split_part(new.email,'@',1),'Member'),120));
  return new;
 end $$;
-revoke all on function public.bootstrap_profile() from public;
-create trigger depor_auth_profile after insert on auth.users for each row execute function public.bootstrap_profile();
+revoke all on function private.bootstrap_profile() from public;
+create trigger depor_auth_profile after insert on auth.users for each row execute function private.bootstrap_profile();
 -- Existing auth accounts receive inactive member profiles; no role from user metadata is trusted.
 insert into public.profiles(id,name)
-select id,left(coalesce(nullif(raw_user_meta_data->>'name',''),split_part(email,'@',1),'Member'),120) from auth.users;
-create function public.app_role() returns text language sql stable security definer set search_path = '' as $$
+select id,left(coalesce(nullif(btrim(raw_user_meta_data->>'name'),''),split_part(email,'@',1),'Member'),120) from auth.users;
+create function private.app_role() returns text language sql stable security definer set search_path = '' as $$
  select role from public.profiles where id=auth.uid() and active;
 $$;
-revoke all on function public.app_role() from public;
-grant execute on function public.app_role() to authenticated;
+revoke all on function private.app_role() from public;
+grant execute on function private.app_role() to authenticated;
 create table public.programs (
  id uuid primary key default gen_random_uuid(),
  name text not null check(length(name) between 1 and 160), description text check(length(description)<=2000),
@@ -84,30 +87,30 @@ alter table public.inventory enable row level security;
 revoke all on public.profiles,public.programs,public.tasks,public.finances,public.inventory from anon,authenticated;
 grant select on public.profiles,public.programs,public.tasks,public.finances,public.inventory to authenticated;
 -- Role and active flags can only be changed by a trusted database operator/service role.
-create policy profiles_read on public.profiles for select to authenticated using(id=auth.uid() or public.app_role() is not null);
-create policy programs_read on public.programs for select to authenticated using(public.app_role() is not null);
-create policy finances_read on public.finances for select to authenticated using(public.app_role() is not null);
-create policy inventory_read on public.inventory for select to authenticated using(public.app_role() is not null);
-create policy tasks_read on public.tasks for select to authenticated using(public.app_role() is not null);
+create policy profiles_read on public.profiles for select to authenticated using(id=auth.uid() or private.app_role() is not null);
+create policy programs_read on public.programs for select to authenticated using(private.app_role() is not null);
+create policy finances_read on public.finances for select to authenticated using(private.app_role() is not null);
+create policy inventory_read on public.inventory for select to authenticated using(private.app_role() is not null);
+create policy tasks_read on public.tasks for select to authenticated using(private.app_role() is not null);
 grant insert,delete on public.programs,public.finances,public.inventory,public.tasks to authenticated;
 grant update(name,description,pic,pic_id,start_date,end_date,status,progress,budget) on public.programs to authenticated;
 grant update(description,program_id,type,amount,category,transaction_date,status) on public.finances to authenticated;
 grant update(name,category,quantity,status,condition,emoji,location) on public.inventory to authenticated;
 grant update(title,description,program_id,assignee_id,status,priority,due_date) on public.tasks to authenticated;
-create policy programs_insert on public.programs for insert to authenticated with check(public.app_role() in ('staff','admin') and created_by=auth.uid());
-create policy programs_update on public.programs for update to authenticated using(public.app_role() in ('staff','admin')) with check(public.app_role() in ('staff','admin'));
-create policy programs_delete on public.programs for delete to authenticated using(public.app_role() in ('staff','admin'));
-create policy finances_insert on public.finances for insert to authenticated with check(public.app_role() in ('staff','admin') and created_by=auth.uid());
-create policy finances_update on public.finances for update to authenticated using(public.app_role() in ('staff','admin')) with check(public.app_role() in ('staff','admin'));
-create policy finances_delete on public.finances for delete to authenticated using(public.app_role() in ('staff','admin'));
-create policy inventory_insert on public.inventory for insert to authenticated with check(public.app_role() in ('staff','admin') and created_by=auth.uid());
-create policy inventory_update on public.inventory for update to authenticated using(public.app_role() in ('staff','admin')) with check(public.app_role() in ('staff','admin'));
-create policy inventory_delete on public.inventory for delete to authenticated using(public.app_role() in ('staff','admin'));
-create policy tasks_insert on public.tasks for insert to authenticated with check(created_by=auth.uid() and (public.app_role() in ('staff','admin') or (public.app_role()='member' and (assignee_id is null or assignee_id=auth.uid()))));
+create policy programs_insert on public.programs for insert to authenticated with check(private.app_role() in ('staff','admin') and created_by=auth.uid());
+create policy programs_update on public.programs for update to authenticated using(private.app_role() in ('staff','admin')) with check(private.app_role() in ('staff','admin'));
+create policy programs_delete on public.programs for delete to authenticated using(private.app_role() in ('staff','admin'));
+create policy finances_insert on public.finances for insert to authenticated with check(private.app_role() in ('staff','admin') and created_by=auth.uid());
+create policy finances_update on public.finances for update to authenticated using(private.app_role() in ('staff','admin')) with check(private.app_role() in ('staff','admin'));
+create policy finances_delete on public.finances for delete to authenticated using(private.app_role() in ('staff','admin'));
+create policy inventory_insert on public.inventory for insert to authenticated with check(private.app_role() in ('staff','admin') and created_by=auth.uid());
+create policy inventory_update on public.inventory for update to authenticated using(private.app_role() in ('staff','admin')) with check(private.app_role() in ('staff','admin'));
+create policy inventory_delete on public.inventory for delete to authenticated using(private.app_role() in ('staff','admin'));
+create policy tasks_insert on public.tasks for insert to authenticated with check(created_by=auth.uid() and (private.app_role() in ('staff','admin') or (private.app_role()='member' and (assignee_id is null or assignee_id=auth.uid()))));
 create policy tasks_update on public.tasks for update to authenticated
-using(public.app_role() in ('staff','admin') or (public.app_role()='member' and (created_by=auth.uid() or assignee_id=auth.uid())))
-with check(public.app_role() in ('staff','admin') or (public.app_role()='member' and (created_by=auth.uid() or assignee_id=auth.uid()) and (assignee_id is null or assignee_id=auth.uid())));
-create policy tasks_delete on public.tasks for delete to authenticated using(public.app_role() in ('staff','admin') or (public.app_role()='member' and (created_by=auth.uid() or assignee_id=auth.uid())));
+using(private.app_role() in ('staff','admin') or (private.app_role()='member' and (created_by=auth.uid() or assignee_id=auth.uid())))
+with check(private.app_role() in ('staff','admin') or (private.app_role()='member' and (created_by=auth.uid() or assignee_id=auth.uid()) and (assignee_id is null or assignee_id=auth.uid())));
+create policy tasks_delete on public.tasks for delete to authenticated using(private.app_role() in ('staff','admin') or (private.app_role()='member' and (created_by=auth.uid() or assignee_id=auth.uid())));
 
 -- SECURITY INVOKER preserves the caller's RLS; totals are calculated by Postgres, without REST pagination truncation.
 create function public.dashboard_stats() returns jsonb language sql stable security invoker set search_path = '' as $$
