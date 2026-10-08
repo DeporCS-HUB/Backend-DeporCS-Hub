@@ -30,5 +30,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: psql -h localhost -U postgres -d depor_test -v ON_ERROR_STOP=1 -f supabase/tests/bootstrap.sql
-      - run: psql -h localhost -U postgres -d depor_test -v ON_ERROR_STOP=1 -f supabase/migrations/202610080001_core.sql
-      - run: psql -h localhost -U postgres -d depor_test -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql
+      - run: for migration in supabase/migrations/*.sql; do psql -h localhost -U postgres -d depor_test -v ON_ERROR_STOP=1 -f "$migration"; done
+      - run: for test in supabase/tests/rls*.sql; do psql -h localhost -U postgres -d depor_test -v ON_ERROR_STOP=1 -f "$test"; done

@@ -4,6 +4,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 public class Inputs {
+ public record Profile(@NotBlank @Size(max=120) String name) {}
+ public record Event(@NotBlank @Size(max=160) String name,@Size(max=2000) String description,UUID program_id,@NotBlank @Size(max=160) String venue,@NotNull LocalDate start_date,@NotNull LocalDate end_date,@NotBlank @Pattern(regexp="Planning|Confirmed|Completed|Cancelled") String status,@NotBlank @Pattern(regexp="Not required|Pending|Approved|Rejected") String permit_status) {
+  @com.fasterxml.jackson.annotation.JsonIgnore @AssertTrue public boolean isDateRangeValid() {return start_date==null||end_date==null||!end_date.isBefore(start_date);}
+ }
+
  public record Program(@NotBlank @Size(max=160) String name,@Size(max=2000) String description,@NotBlank @Size(max=120) String pic,UUID pic_id,@NotNull LocalDate start_date,@NotNull LocalDate end_date,@NotBlank @Pattern(regexp="Planning|Ongoing|Active|Completed|Cancelled") String status,@NotNull @Min(0) @Max(100) Integer progress,@NotNull @DecimalMin("0") @Digits(integer=13,fraction=2) BigDecimal budget) {
   @com.fasterxml.jackson.annotation.JsonIgnore @AssertTrue public boolean isDateRangeValid() {return start_date==null||end_date==null||!end_date.isBefore(start_date);}
  }

@@ -33,10 +33,12 @@ The Dockerfile builds/tests with Java 21 and runs the JAR as an unprivileged use
 
 1. Create an isolated development Supabase project or branch.
 2. Inspect existing tables, foreign keys, grants, functions, policies, and Auth accounts. This migration intentionally fails when names conflict; it must not silently overwrite an existing schema. Reconcile any legacy public `users`/password schema manually and discontinue its grants after migrating real accounts through Supabase Auth.
-3. Apply the migration to development using Supabase SQL Editor, or a trusted SQL connection:
+3. Apply all migrations in filename order to development using Supabase SQL Editor, or a trusted SQL connection:
 
 ```sh
-psql "$DEV_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/202610080001_core.sql
+for migration in supabase/migrations/*.sql; do
+  psql "$DEV_DATABASE_URL" -v ON_ERROR_STOP=1 -f "$migration" || exit 1
+done
 ```
 
 4. Create development accounts through Supabase Auth's dashboard or trusted admin workflow. Use a trusted SQL operator to promote **only the intended development account**, for example:
@@ -59,15 +61,16 @@ There is no automatic production migration, reset, seed, role promotion, or depl
 - `GET /api/auth/session`: verifies the token and returns the current trusted profile.
 - `POST /api/auth/logout`: revokes the current refresh session through Supabase and clears the cookie.
 - Auth mutations require an exact allowed `Origin`, including command-line requests. No cookie authenticates data endpoints; these require a bearer token. This separates refresh-cookie CSRF protection from bearer API authorization.
-- User metadata, request-supplied roles, and client UI controls cannot grant privileges. Profiles' role/active flags have no authenticated update grant. A trusted database operator manages roles; profile role administration is not exposed through the UI.
+- User metadata, request-supplied roles, and client UI controls cannot grant privileges. Profiles' role/active flags have no authenticated update grant. `PUT /api/profiles/me` permits updating only the caller's display name. RLS and column grants prevent changes to other accounts, roles, activation, or identity. A trusted database operator manages roles; profile role administration is not exposed through the UI.
 - All data requests use the user's JWT and the anon API key, **not** a privileged database bypass. RLS rechecks active membership and ownership in the database.
 
 | Operation | member | staff/admin |
 | --- | --- | --- |
 | Read dashboard, programs, tasks, finances, inventory, profiles | Yes, active profile required | Yes |
-| Program, finance, inventory create/update/delete | No | Yes |
+| Program, finance, inventory, event create/update/delete | No | Yes |
 | Create tasks | Self assignment only | Any assignee |
 | Update/delete tasks | Creator or assignee; cannot reassign to others | All |
+| Edit own display name | Yes | Yes |
 | Change roles/active flags | No | Trusted SQL/admin provisioning only |
 
 Supabase access JWTs are stateless: logout revokes refresh tokens, while an already copied access token can remain usable until its expiry. The UI removes its access token immediately, and inactive profiles are rejected on every request. Cross-site cookie restrictions may block refresh on unrelated domains; prefer a same-origin reverse proxy or same-site custom domains. Use HTTPS in cloud and exact CORS origins.
@@ -82,7 +85,8 @@ All endpoints use `/api`. Success: `{ "data": ... }`; errors: `{ "error": { "cod
 | tasks | GET `/tasks` | POST `/tasks` | PUT `/tasks/{uuid}` | DELETE `/tasks/{uuid}` |
 | finances | GET `/finances` | POST `/finances` | PUT `/finances/{uuid}` | DELETE `/finances/{uuid}` |
 | inventory | GET `/inventory` | POST `/inventory` | PUT `/inventory/{uuid}` | DELETE `/inventory/{uuid}` |
-| profiles | GET `/profiles` | — | — | — |
+| events | GET `/events` | POST `/events` | PUT `/events/{uuid}` | DELETE `/events/{uuid}` |
+| profiles | GET `/profiles` | — | PUT `/profiles/me` (own name only) | — |
 
 Request DTOs and limits are defined in `Inputs.java`. Unknown fields are rejected. UUIDs, date ranges, status enums, quantities, amounts, and string lengths are validated; creator IDs are injected server-side. Deleting a program with tasks/transactions returns a conflict. Failed or empty database writes never produce a success result.
 
@@ -94,7 +98,7 @@ Request DTOs and limits are defined in `Inputs.java`. Unknown fields are rejecte
 mvn verify
 ```
 
-- 24 Spring MockMvc/security tests use a mocked Supabase adapter.
+- 31 Spring MockMvc/security tests use a mocked Supabase adapter.
 - 6 adapter tests use a local HTTP server to verify Auth calls, trusted profile roles, inactive/missing profiles, and sanitized upstream errors.
 - `supabase/tests/rls.sql` tests real SQL grants/RLS, ownership, constraints, and >1,000-row aggregation in a rollback transaction. Run only in a disposable development database.
 - `supabase/tests/bootstrap.sql` is a **local PostgreSQL harness** that stubs Auth schema/roles. Never run it on a Supabase project. CI uses PostgreSQL 17 and this harness; it does not validate hosted Supabase Auth.
@@ -103,10 +107,22 @@ For a fresh local PostgreSQL test database:
 
 ```sh
 psql "$LOCAL_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/bootstrap.sql
-psql "$LOCAL_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/202610080001_core.sql
-psql "$LOCAL_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql
+for migration in supabase/migrations/*.sql; do
+  psql "$LOCAL_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f "$migration" || exit 1
+done
+for test in supabase/tests/rls*.sql; do
+  psql "$LOCAL_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f "$test" || exit 1
+done
 ```
 
 Local implementation validation used PGlite's PostgreSQL runtime with the same harness, migration, and RLS tests. This verifies SQL semantics, not the hosted Supabase service. Live schema inspection, seed execution, login, and CRUD require installed environment settings and development accounts. No hosted Supabase mutation was performed in this implementation session.
 
-Events/permit workflows, account invitations, attendance/organization structure, stored settings, attachment uploads, and concurrent-edit conflict detection are outside this implementation. Team has a read-only live profile list; Events and Settings explicitly report their current limits.
+## Events and profile settings
+
+`supabase/migrations/202610080002_events_profiles.sql` adds event schedules, program relationships, venue and permit tracking, and an own-profile name update policy. It is additive and must be reviewed/applied after the core migration. The new nonblank profile-name constraint deliberately fails if existing names contain only spaces; inspect and reconcile those records before applying. Both migrations were exercised only on disposable local/CI databases, not on hosted Supabase.
+
+Event date ranges and statuses are validated by Java and PostgreSQL. Active members can read events; staff/admin can create, edit, and delete them. Event lists sort by start date. Linked events prevent deletion of their program. Permit status is an internal record entered by staff after confirmation from the venue operator; there is no external application, notification, or approval delivery workflow.
+
+Settings persists the caller's display name with a validated DTO. Name changes do not modify Supabase Auth credentials or grant any privileges. `supabase/tests/rls_events_profiles.sql` checks own/other/inactive profile edits, column privileges, event CRUD, dates, anonymous access, and foreign-key protection in a rollback transaction.
+
+Account invitations, attendance/organization structure, role administration UI, external permits, language/theme/notification preferences, attachment uploads, and concurrent-edit conflict detection remain outside this implementation. Team remains a read-only profile directory.

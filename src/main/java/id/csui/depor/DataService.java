@@ -11,7 +11,8 @@ public class DataService {
  public JsonNode list(String table,Principal p,int page,int size) {
   if(page<0||page>100000||size<1||size>100) throw new ApiException(400,"VALIDATION_ERROR","Pagination tidak valid.");
   String fields=table.equals("profiles")?"id,name,role":"*";
-  return db.request(HttpMethod.GET,"/rest/v1/"+table+"?select="+fields+"&order=created_at.desc,id.asc&limit="+size+"&offset="+((long)page*size),p.token,null);
+  String order=table.equals("events")?"start_date.asc,id.asc":"created_at.desc,id.asc";
+  return db.request(HttpMethod.GET,"/rest/v1/"+table+"?select="+fields+"&order="+order+"&limit="+size+"&offset="+((long)page*size),p.token,null);
  }
  public JsonNode write(String table,UUID id,Object input,Principal p) {
   boolean task=table.equals("tasks");
@@ -38,6 +39,11 @@ public class DataService {
   authorize(table,id,p);
   JsonNode result=db.request(HttpMethod.DELETE,"/rest/v1/"+table+"?id=eq."+id,p.token,null);
   if(!result.isArray()||result.isEmpty()) throw new ApiException(404,"NOT_FOUND","Data tidak ditemukan atau sudah berubah.");
+ }
+ public JsonNode updateProfile(Inputs.Profile input,Principal p) {
+  JsonNode result=db.request(HttpMethod.PATCH,"/rest/v1/profiles?id=eq."+p.id+"&select=id,name,role",p.token,java.util.Map.of("name",input.name().strip()));
+  if(!result.isArray()||result.size()!=1) throw new ApiException(404,"NOT_FOUND","Profil tidak ditemukan atau tidak dapat diperbarui.");
+  return result.get(0);
  }
  public JsonNode dashboard(Principal p){return db.request(HttpMethod.POST,"/rest/v1/rpc/dashboard_stats",p.token,java.util.Map.of());}
 }

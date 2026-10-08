@@ -52,4 +52,42 @@ class ApiTest {
  @Test void logoutRevokesThroughSupabaseAndClearsCookie() throws Exception {mvc.perform(post("/api/auth/logout").header("Origin","http://localhost:3000").header("Authorization","Bearer member-token")).andExpect(status().isOk()).andExpect(header().string("Set-Cookie",org.hamcrest.Matchers.containsString("Max-Age=0")));verify(db).request(HttpMethod.POST,"/auth/v1/logout?scope=local","member-token",null);}
  @Test void logoutUpstreamFailureNotReportedSuccessful() throws Exception {when(db.request(eq(HttpMethod.POST),eq("/auth/v1/logout?scope=local"),any(),isNull())).thenThrow(new ApiException(503,"SUPABASE_UNAVAILABLE","Unavailable"));mvc.perform(post("/api/auth/logout").header("Origin","http://localhost:3000").header("Authorization","Bearer member-token")).andExpect(status().isServiceUnavailable()).andExpect(jsonPath("$.data.loggedOut").doesNotExist());}
  @Test void programDtoHasOnlyDatabaseFields() throws Exception {var input=new Inputs.Program("Program",null,"Staff",null,java.time.LocalDate.now(),java.time.LocalDate.now(),"Planning",0,java.math.BigDecimal.ZERO);JsonNode json=mapper.valueToTree(input);assertFalse(json.has("dateRangeValid"));assertEquals(9,json.size());}
+
+ String event(){return "{\"name\":\"Tournament\",\"venue\":\"SOR\",\"start_date\":\"2026-10-09\",\"end_date\":\"2026-10-10\",\"status\":\"Planning\",\"permit_status\":\"Pending\"}";}
+ @Test void memberCannotWriteEvents() throws Exception {
+  mvc.perform(post("/api/events").header("Authorization","Bearer member-token").contentType(MediaType.APPLICATION_JSON).content(event())).andExpect(status().isForbidden());
+  mvc.perform(put("/api/events/"+row).header("Authorization","Bearer member-token").contentType(MediaType.APPLICATION_JSON).content(event())).andExpect(status().isForbidden());
+  mvc.perform(delete("/api/events/"+row).header("Authorization","Bearer member-token")).andExpect(status().isForbidden());
+  verify(db,never()).request(any(),any(),any(),any());
+ }
+ @Test void eventDateRangeAndPermitValidated() throws Exception {
+  mvc.perform(post("/api/events").header("Authorization","Bearer staff-token").contentType(MediaType.APPLICATION_JSON).content(event().replace("2026-10-10","2026-10-08"))).andExpect(status().isBadRequest());
+  mvc.perform(post("/api/events").header("Authorization","Bearer staff-token").contentType(MediaType.APPLICATION_JSON).content(event().replace("Pending","Invented"))).andExpect(status().isBadRequest());
+  verify(db,never()).request(any(),any(),any(),any());
+ }
+ @Test void staffCreatesEventWithServerOwner() throws Exception {
+  when(db.request(eq(HttpMethod.POST),eq("/rest/v1/events"),eq("staff-token"),any())).thenReturn(mapper.readTree("[{\"id\":\""+row+"\"}]"));
+  mvc.perform(post("/api/events").header("Authorization","Bearer staff-token").contentType(MediaType.APPLICATION_JSON).content(event())).andExpect(status().isCreated());
+  var captor=org.mockito.ArgumentCaptor.forClass(Object.class);verify(db).request(eq(HttpMethod.POST),eq("/rest/v1/events"),eq("staff-token"),captor.capture());
+  JsonNode payload=(JsonNode)captor.getValue();assertEquals(uid.toString(),payload.path("created_by").asText());assertFalse(payload.has("dateRangeValid"));
+ }
+ @Test void memberReadsEventsInDateOrder() throws Exception {
+  when(db.request(eq(HttpMethod.GET),eq("/rest/v1/events?select=*&order=start_date.asc,id.asc&limit=50&offset=0"),eq("member-token"),isNull())).thenReturn(mapper.readTree("[]"));
+  mvc.perform(get("/api/events").header("Authorization","Bearer member-token")).andExpect(status().isOk()).andExpect(jsonPath("$.data").isArray());
+ }
+ @Test void profileUpdateUsesOnlyOwnIdAndTrimmedName() throws Exception {
+  String path="/rest/v1/profiles?id=eq."+uid+"&select=id,name,role";
+  when(db.request(eq(HttpMethod.PATCH),eq(path),eq("member-token"),eq(Map.of("name","New Name")))).thenReturn(mapper.readTree("[{\"id\":\""+uid+"\",\"name\":\"New Name\",\"role\":\"member\"}]"));
+  mvc.perform(put("/api/profiles/me").header("Authorization","Bearer member-token").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"  New Name  \"}")).andExpect(status().isOk()).andExpect(jsonPath("$.data.name").value("New Name"));
+ }
+ @Test void profileUpdateRejectsPrivilegeFieldsAndBlankName() throws Exception {
+  for(String body:List.of("{\"name\":\"New\",\"role\":\"admin\"}","{\"name\":\"New\",\"active\":true}","{\"name\":\"   \"}")) {
+   mvc.perform(put("/api/profiles/me").header("Authorization","Bearer member-token").contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isBadRequest());
+  }
+  verify(db,never()).request(any(),any(),any(),any());
+ }
+ @Test void profileWriteReturningNoRowIsFailure() throws Exception {
+  when(db.request(eq(HttpMethod.PATCH),any(),eq("member-token"),any())).thenReturn(mapper.readTree("[]"));
+  mvc.perform(put("/api/profiles/me").header("Authorization","Bearer member-token").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"New Name\"}")).andExpect(status().isNotFound());
+ }
 }
