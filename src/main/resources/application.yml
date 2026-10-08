@@ -1,0 +1,17 @@
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+spring:
+  application:
+    name: depor-hub
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+app:
+  supabase-url: ${SUPABASE_URL}
+  supabase-anon-key: ${SUPABASE_ANON_KEY}
+  allowed-origins: ${APP_ALLOWED_ORIGINS:http://localhost:3000}
+  cookie-secure: ${APP_COOKIE_SECURE:true}
+  cookie-same-site: ${APP_COOKIE_SAME_SITE:Lax}
