@@ -15,6 +15,8 @@ Install Java 21 and Maven 3.9+. Set environment values through your development/
 | `APP_COOKIE_SAME_SITE` | `Lax` by default; `None` requires HTTPS and secure cookies |
 | `PORT` | HTTP port, default `8080` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Optional, backend-only; **not used by normal application requests** |
+| `SUPABASE_CONNECT_TIMEOUT_MS` | Connection timeout; default 5000, permitted range 1–120000 ms |
+| `SUPABASE_READ_TIMEOUT_MS` | Upstream read timeout; default 10000, permitted range 1–120000 ms |
 
 No application `JWT_SECRET` is needed. The supplied public JWKS is not a JWT secret. Access tokens are verified by calling Supabase `/auth/v1/user`, so verification follows Supabase's current signing keys and token rules.
 
@@ -99,7 +101,7 @@ mvn verify
 ```
 
 - 31 Spring MockMvc/security tests use a mocked Supabase adapter.
-- 10 adapter tests use a local HTTP server to verify Auth calls, trusted profile roles, inactive/missing profiles, and sanitized upstream errors.
+- 11 adapter tests use a local HTTP server to verify Auth calls, trusted profile roles, inactive/missing profiles, and sanitized upstream errors.
 - `supabase/tests/rls.sql` tests real SQL grants/RLS, ownership, constraints, and >1,000-row aggregation in a rollback transaction. Run only in a disposable development database.
 - `supabase/tests/bootstrap.sql` is a **local PostgreSQL harness** that stubs Auth schema/roles. Never run it on a Supabase project. CI uses PostgreSQL 17 and this harness; it does not validate hosted Supabase Auth.
 
@@ -115,7 +117,7 @@ for test in supabase/tests/rls*.sql; do
 done
 ```
 
-Local implementation validation used PGlite's PostgreSQL runtime with the same harness, migration, and RLS tests. This verifies SQL semantics, not the hosted Supabase service. Live schema inspection, seed execution, login, and CRUD require installed environment settings and development accounts. The two reviewed application migrations were applied to the authorized development project on 8 October 2026. The hosted PostgreSQL RLS suites passed using temporary fixtures and simulated JWT claims, with every fixture rolled back. This is separate from successful hosted Auth login and authenticated HTTP CRUD, which still require verified development accounts.
+Local implementation validation used PGlite's PostgreSQL runtime with the same harness, migration, and RLS tests. This verifies SQL semantics, not the hosted Supabase service. Live schema inspection, seed execution, login, and CRUD require installed environment settings and development accounts. The two reviewed application migrations were applied to the authorized development project on 8 October 2026. The hosted PostgreSQL RLS suites passed using temporary fixtures and simulated JWT claims, with every fixture rolled back. This is separate from successful hosted Auth login and authenticated HTTP CRUD, now also validated by 49 real API checks using the two user-provisioned staff/member accounts.
 
 ## Events and profile settings
 
@@ -131,7 +133,7 @@ Account invitations, attendance/organization structure, role administration UI, 
 
 Both migration filenames match the actual Supabase migration versions: `20261008154150_core.sql` and `20261008154204_events_profiles.sql`. Do not run a second copy under an older filename. Internal privileged helpers live in schema `private`; metadata cannot assign roles/activation, and whitespace-only display names receive a valid fallback.
 
-See [development validation](docs/live-development-validation.md) for current evidence and remaining limits. Six application tables have RLS, security advisor has no lints, and public HTTP requests cannot read application data. Performance advisor recommendations remain documented; no extra paid resources or add-ons were enabled.
+See [development validation](docs/live-development-validation.md) for current evidence and remaining limits. Six application tables have RLS, the latest Auth advisor warns that leaked-password protection is disabled (a Pro feature), while Free remains in use, and public HTTP requests cannot read application data. Performance advisor recommendations remain documented; no extra paid resources or add-ons were enabled.
 
 For a read-only test of hosted reachability and rejection paths, build the backend and set its environment securely, then run:
 
@@ -141,3 +143,20 @@ python scripts/verify-hosted-readiness.py
 ```
 
 This script accepts only the authorized development URL, checks anonymous table/RPC denial, starts the backend on loopback, and checks invalid login/token/refresh and Origin handling. It creates no accounts or data and does not test successful login, session rotation, authenticated CRUD/persistence, or logout. Hosted email confirmation remains enabled. Create and verify staff/member Auth accounts through the trusted dashboard/admin flow before positive acceptance testing; activate only their verified UUIDs through a trusted operator.
+
+### Positive hosted API acceptance
+
+`scripts/integration-hosted.py` uses two existing, confirmed, active development accounts. Set `DEPOR_TEST_STAFF_EMAIL`, `DEPOR_TEST_STAFF_PASSWORD`, `DEPOR_TEST_STAFF_UUID`, and the matching `DEPOR_TEST_MEMBER_*` variables in secure process environment, alongside the backend URL/public key. Do not commit credentials or put them in command-line arguments or logs.
+
+```sh
+mvn verify
+python scripts/integration-hosted.py
+```
+
+The script only permits the authorized development ref. It starts Java on loopback and configures a 15-second connect / 30-second upstream read timeout for the managed test runtime; application defaults remain 5 / 10 seconds. Diagnostics print only the transport exception class, without URLs, bodies, keys, or tokens.
+
+It logs in through real Supabase Auth, creates/updates/deletes its own fixture records through Java, verifies persistence and RLS with user-token PostgREST, checks dashboard totals, member restrictions, ownership/profile grants, FK conflicts, refresh cookie rotation, and revoked refresh after logout. Cleanup restores the member's original display name and removes only tracked test records. Existing users/roles are not created, deleted, reset, or changed by this script. Browser React/reload behavior is outside the API acceptance suite.
+
+The Supabase adapter uses Java HttpClient through Spring JdkClientHttpRequestFactory, which supports the PATCH requests used by PostgREST edits. A regression test checks the actual HTTP method, JSON body, and user-token header; the previous HttpURLConnection transport rejected PATCH with ProtocolException.
+
+Current positive hosted acceptance passed 49 checks and mvn verify passed 42 Java tests. Both user-provisioned test accounts are confirmed/active; all fixture records and test sessions were removed. Real React browser acceptance remains separate. See docs/live-development-validation.md for the latest Auth/performance advisories and validation limits.

@@ -1,55 +1,76 @@
-# Supabase development validation — 8 October 2026
+# Supabase development integration validation
 
-## Authorized target
+Checkpoint: 2026-10-08 23:55 WIB.
 
-**DeporCS HUB**, ref `dajpnhkutkhgxwkjzvpg`, organization `jvdgogmbphotxdzrvbvc`, region `ap-northeast-2`. The user explicitly designated this ref as development, authorized `core` and `events_profiles`, and revoked its earlier production restriction. Organization plan is **Free**, verified via the Supabase connector. No project/branch provisioning, paid compute, upgrade, or paid add-on was used.
+## Target and cost
 
-## Applied schema
+**DeporCS HUB**, ref `dajpnhkutkhgxwkjzvpg`, organization `jvdgogmbphotxdzrvbvc`, region `ap-northeast-2`. The user explicitly designated this ref as development and authorized the application migrations. Organization plan remains **Free**. No project/branch provisioning, upgrade, paid compute, or paid add-on was used.
+
+## Accounts
+
+The user created two Auth users through the dashboard. Their supplied UUID/email pairs were matched against Auth, email confirmation was verified, and a trusted SQL operator activated exactly those profiles: one staff and one member. Role/active changes were limited to the verified UUIDs; user metadata was not trusted for authorization. Both accounts remain confirmed and active after testing. Personal account identifiers and passwords are intentionally kept out of this report and Git.
+
+## Schema
 
 | Hosted version | Migration | Result |
 | --- | --- | --- |
-| 20261008154150 | core | Applied successfully |
-| 20261008154204 | events_profiles | Applied successfully |
+| 20261008154150 | core | Applied |
+| 20261008154204 | events_profiles | Applied |
 
-Repository filenames match these returned migration versions. Six application tables (profiles, programs, tasks, finances, inventory, events) have RLS. Privileged profile bootstrap and role lookup functions live in `private`; authenticated clients cannot execute bootstrap or promote roles/activation. Public dashboard RPC preserves caller RLS through SECURITY INVOKER. Auth profile bootstrap normalizes whitespace-only names and ignores role/active metadata for authorization.
+Repository filenames match hosted history. All six application tables have RLS. Internal privileged functions are in `private`; dashboard RPC is SECURITY INVOKER. Profiles start inactive/member; role/activation metadata cannot grant access, and whitespace metadata names receive a valid fallback.
 
-## Proven hosted behavior
+Both SQL RLS suites passed locally and on hosted PostgreSQL with rolled-back fixtures and simulated SQL JWT claims. They require an empty disposable database and must not be rerun on this now-populated Auth environment. Never run the local `bootstrap.sql` Auth harness on hosted Supabase.
 
-Both transactional SQL suites passed against the actual hosted PostgreSQL database, without using the local Auth bootstrap harness. Every Auth/profile/application fixture was rolled back. The suites require an empty development database and simulate JWT claims while using the authenticated/anon SQL roles; they do **not** establish real Supabase Auth sessions.
+## Current results
 
-Covered: staff CRUD, member restrictions and task ownership, protection of role/active/identity/creator fields, inactive users, anonymous denial, profile name updates, event CRUD/permit status, invalid dates/quantity, foreign-key deletion restrictions, metadata role/activation spoofing, whitespace-name fallback, and dashboard aggregation over 1,002 pending tasks. Post-test counts confirmed no retained Auth or application fixtures.
+- **42 Java tests pass**: 31 mocked API/security plus 11 simulated HTTP adapter tests.
+- **49 real Auth/Java/PostgREST checks pass**, using the actual hosted development service and user JWTs. No service-role bypass was used.
+- Earlier read-only readiness also passed 15 live HTTP/API checks, including anonymous table/RPC denial and invalid login/token/refresh rejection.
 
-Live HTTP checks showed hosted Auth settings reachable, email confirmation enabled, and anonymous PostgREST access to all six tables and dashboard RPC denied. The readiness script creates no user/data and does not disable email confirmation.
+The 49-check suite proves:
 
-The integration test found a real adapter mismatch: hosted Auth returns `403` plus `error_code=bad_jwt` for a malformed JWT. Java previously reported FORBIDDEN, which prevents the frontend's 401 refresh handling. The adapter now maps this specific Auth error to 401 UNAUTHENTICATED; genuine Auth permissions and Data API 403 responses stay forbidden. Error details remain sanitized. See the [official Auth error-code guide](https://supabase.com/docs/guides/auth/debugging/error-codes).
+- Staff/member password login through Java and trusted-profile lookup; HttpOnly refresh cookie headers.
+- Staff create, edit and delete on programs, tasks, finances, inventory and events.
+- Edited records persist in hosted PostgreSQL and can be read by the member in separate direct PostgREST requests.
+- Dashboard totals reflect real writes and return to their baseline after fixture removal.
+- Member management restrictions; ownership of tasks; member task create/edit/delete; backend and direct RLS prevention of reassignment.
+- Direct column grants reject role escalation; own profile name updates persist; RLS rejects changing another profile's name.
+- A linked program cannot be deleted and returns 409.
+- Both accounts rotate refresh cookies, authenticate with refreshed access tokens, clear cookies at logout, and cannot reuse their logged-out refresh tokens.
 
-Final results: `mvn verify` passed **41 tests** (31 mocked API/security + 10 simulated Auth/REST HTTP adapter tests), and `verify-hosted-readiness.py` passed **15 live HTTP/API checks**. Those include Java backend startup/health, authentication required, real hosted invalid-login/token/refresh rejection, missing-refresh cookie clearing, and untrusted-Origin denial, alongside hosted settings and anonymous table/RPC denial. Successful Auth login/refresh/CRUD remains outside these checks.
+Cleanup is independently verified by SQL: Auth users 2, profiles 2, programs/tasks/finances/inventory/events all 0, and remaining sessions for the two test accounts 0. Original profile names were restored. The permanent test accounts and their requested roles remain available.
 
-## Advisors
+## Fixes found by live integration
 
-Security advisor returned no lints after both migrations. This is a point-in-time check, not a certification of every security property.
+The earlier adapter mapped Auth `403/bad_jwt` to permission denial. It now reports 401 so the frontend's refresh path can handle invalid sessions; genuine 403 permissions remain forbidden. See the [Auth error-code guide](https://supabase.com/docs/guides/auth/debugging/error-codes).
 
-Performance advisor findings remain unmodified by these two migrations:
+Live edit requests also exposed `ProtocolException`: the HttpURLConnection request factory rejected PATCH, which PostgREST requires for updates. The adapter now uses Java HttpClient through Spring JdkClientHttpRequestFactory. A regression test checks actual PATCH method, JSON payload and bearer header. All five hosted resource edits and own-profile edits now succeed. See [Spring request factory documentation](https://docs.spring.io/spring-framework/docs/6.1.6/javadoc-api/org/springframework/http/client/JdkClientHttpRequestFactory.html).
 
-- Four `created_by` foreign keys on programs, finances, inventory, and events lack a covering index. [Remediation: unindexed foreign keys](https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys).
-- Nine policies reevaluate `auth.uid()` per row. Review a follow-up migration using scalar SELECT expressions while preserving authorization. [Remediation: Auth RLS initialization plan](https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan).
-- Nine indexes were reported unused on the new empty database. Retain the indexes required by ownership/FK/query access; no workload has established that they are redundant. [Unused-index advisory](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index).
+Connection/read timeouts are configurable and bounded to 1–120000 ms. Defaults remain 5000/10000 ms; the managed acceptance script uses 15000/30000 ms. Transport diagnostics log only exception class names at DEBUG, without request bodies, URLs, keys or tokens. TLS verification stays enabled.
 
-## Validation limits and next actions
+## Advisors and remaining limits
 
-No permanent Auth test accounts exist. Public email signup requires confirmation, and no trusted admin key or verified staff/member credentials were configured in the runtime. Successful Auth login, authenticated HTTP CRUD/persistence, positive refresh rotation, logout/revocation, and end-to-end React reload flows remain unverified. No seed, production deployment, or merge occurred.
+The latest security advisor reports **one Auth warning**: leaked-password protection is disabled. This capability requires Pro or above; the authorized Free/$0 constraint is retained. This is not evidence that these specific passwords have leaked. [Password-strength/leaked-password remediation](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
 
-Create/verify two test users through the official development Auth dashboard/admin workflow. Password entry belongs to the user. Verify their UUIDs before trusted SQL activation: staff with `role=staff, active=true`; member with `role=member, active=true`. Never take role/activation from user_metadata. Keep test credentials in secure process environment, never Git/chat/logs.
+Performance recommendations from the schema inspection remain:
 
-Then run the Java API and React UI and verify login → dashboard → role-aware CRUD → reload → refresh → logout. Local defaults: allowed origin `http://localhost:3000`, HTTP cookie secure false; use HTTPS/secure cookies in cloud.
+- Four created_by foreign keys lack covering indexes. [FK-index remediation](https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys).
+- Nine RLS policies reevaluate auth.uid per row. [RLS initialization-plan remediation](https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan).
+- Unused-index INFO was observed on the fresh database; retain the indexes until workload evidence supports removal. [Unused-index advisory](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index).
 
-Read-only readiness is reproducible after building the JAR:
+The suite exercises API/HTTP cookie handling, not a real React browser, browser reload, or browser third-party-cookie restrictions. Frontend's previous 10 unit and 7 mocked-API browser tests remain separate evidence. Invitations, attendance, role-administration UI, attachments, notifications, preferences, external permit delivery and edit-conflict resolution remain unimplemented.
+
+Copied access JWTs may remain usable until expiry; the logout assertion concerns revoked refresh tokens. Profiles' role/active state is rechecked by application/database access. No production deployment or merge occurred.
+
+## Reproduce
+
+Set development URL/public key and existing test-user credentials only through secure process environment. Never commit credentials or put them in command-line arguments, reports or logs. The positive script expects DEPOR_TEST_STAFF_EMAIL/PASSWORD/UUID and DEPOR_TEST_MEMBER_EMAIL/PASSWORD/UUID.
 
 ```sh
 mvn verify
-python scripts/verify-hosted-readiness.py
+python scripts/integration-hosted.py
 ```
 
-Set SUPABASE_URL and SUPABASE_ANON_KEY securely first; JAVA_HOME is optional. The script permits only the authorized development ref and launches Java on loopback. With an environment HTTP proxy, it configures Java's HTTPS proxy; it does not disable TLS checks.
+The script only permits the authorized project, launches Java on loopback, creates/removes its own fixture rows, restores profile name, and logs out its sessions. It never provisions/deletes Auth users or changes roles/activation. `scripts/verify-hosted-readiness.py` provides the earlier read-only smoke checks.
 
-Commits use `[skip ci]` to avoid starting new GitHub Actions runs while the user's zero-cost requirement remains in force. Current validation comes from local Java tests, PGlite, actual hosted SQL RLS, and live read-only HTTP/API checks; old GitHub CI is historical evidence. Draft PRs remain unmerged.
+Commits use `[skip ci]` to avoid new Actions runs under the user's zero-cost constraint. Current evidence comes from local Java tests and the real development service; draft PRs remain unmerged.

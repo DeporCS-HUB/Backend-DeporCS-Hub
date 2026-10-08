@@ -5,14 +5,21 @@ import java.util.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.http.*;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.*;
 @Component
 public class Supabase {
+ private static final org.slf4j.Logger LOG=org.slf4j.LoggerFactory.getLogger(Supabase.class);
  private final RestClient client;
- public Supabase(@Value("${app.supabase-url}") String url,@Value("${app.supabase-anon-key}") String key) {
+ public Supabase(String url,String key) {this(url,key,5000,10000);}
+ @org.springframework.beans.factory.annotation.Autowired
+ public Supabase(@Value("${app.supabase-url}") String url,@Value("${app.supabase-anon-key}") String key,
+                 @Value("${app.supabase-connect-timeout-ms:5000}") int connectTimeoutMs,
+                 @Value("${app.supabase-read-timeout-ms:10000}") int readTimeoutMs) {
   if(url.isBlank() || key.isBlank()) throw new IllegalArgumentException("Supabase environment is required");
-  var factory=new SimpleClientHttpRequestFactory();factory.setConnectTimeout(Duration.ofSeconds(5));factory.setReadTimeout(Duration.ofSeconds(10));
+  if(connectTimeoutMs<1 || connectTimeoutMs>120000 || readTimeoutMs<1 || readTimeoutMs>120000) throw new IllegalArgumentException("Supabase timeouts must be 1–120000 milliseconds");
+  var httpClient=java.net.http.HttpClient.newBuilder().connectTimeout(Duration.ofMillis(connectTimeoutMs)).build();
+  var factory=new JdkClientHttpRequestFactory(httpClient);factory.setReadTimeout(Duration.ofMillis(readTimeoutMs));
   client=RestClient.builder().baseUrl(url).defaultHeader("apikey",key).requestFactory(factory).build();
  }
  public JsonNode request(HttpMethod method,String path,String token,Object body) {
@@ -36,7 +43,7 @@ public class Supabase {
    if(detail.contains("42501")) throw new ApiException(403,"FORBIDDEN","Anda tidak memiliki hak untuk operasi ini.");
    if(detail.contains("23514") || detail.contains("22P02")) throw new ApiException(400,"VALIDATION_ERROR","Data tidak sesuai constraint database.");
    throw new ApiException(502,"DATABASE_UNAVAILABLE","Layanan data belum siap atau sedang tidak tersedia.");
-  } catch(ResourceAccessException e) { throw new ApiException(503,"SUPABASE_UNAVAILABLE","Supabase tidak dapat dihubungi."); }
+  } catch(ResourceAccessException e) {LOG.debug("Supabase transport failure: {}",e.getMostSpecificCause().getClass().getSimpleName());throw new ApiException(503,"SUPABASE_UNAVAILABLE","Supabase tidak dapat dihubungi.");}
  }
  public Principal authenticate(String token) {
   JsonNode user=request(HttpMethod.GET,"/auth/v1/user",token,null);

@@ -1,59 +1,56 @@
-# Depor CS HUB — checkpoint development
+# Depor CS HUB — development checkpoint
 
-Checkpoint: 8 Oktober 2026. Baca juga AGENTS.md dan README.md.
+Checkpoint: 2026-10-08 23:55 WIB. Read AGENTS.md and README.md before continuing.
 
-## Project dan izin
+## Project and authorization
 
-- Project development: **DeporCS HUB**, ref `dajpnhkutkhgxwkjzvpg`, URL `https://dajpnhkutkhgxwkjzvpg.supabase.co`.
-- Organisasi **DeporCS Hub**, ID `jvdgogmbphotxdzrvbvc`; plan **Free** terverifikasi melalui connector. Hanya fitur Free/$0; tidak ada upgrade, add-on, paid branching, atau provisioning baru.
-- Ref ini awalnya diperlakukan sebagai production. Pada 8 Oktober 2026 pengguna secara eksplisit menetapkannya sebagai development, mengizinkan migrasi `core` dan `events_profiles`, dan mencabut larangan production untuk ref tersebut. Jangan memakai larangan lama sebagai status terkini; jangan mengubah project production lain.
-- Branch kerja kedua repository: `codex/supabase-main-flows`. Draft PR #1 tetap belum merge; jangan deploy/merge tanpa instruksi baru.
-- Jangan menaruh kredensial di Git/dokumen/log/frontend. Gunakan environment backend. Frontend tidak memerlukan key Supabase.
+Development is **DeporCS HUB**, ref `dajpnhkutkhgxwkjzvpg`, URL `https://dajpnhkutkhgxwkjzvpg.supabase.co`, organization **DeporCS Hub** `jvdgogmbphotxdzrvbvc`. Plan Free is verified. Only Free/$0 features are authorized; no upgrades, paid branching, compute/add-ons, or new provisioning.
 
-## Repository
+The user explicitly reclassified this formerly protected ref as development, authorized migrations core/events_profiles, and revoked its former production restriction. Do not modify other production projects. Work on `codex/supabase-main-flows`; draft PR #1 in each repo remains unmerged. No deployment/merge is authorized.
 
-| Bagian | Repository | Draft PR |
-| --- | --- | --- |
-| Java API | https://github.com/DeporCS-HUB/Backend-DeporCS-Hub | https://github.com/DeporCS-HUB/Backend-DeporCS-Hub/pull/1 |
-| React UI | https://github.com/DeporCS-HUB/Frontend-DeporCS-Hub | https://github.com/DeporCS-HUB/Frontend-DeporCS-Hub/pull/1 |
+| Repository | Draft PR |
+| --- | --- |
+| https://github.com/DeporCS-HUB/Backend-DeporCS-Hub | https://github.com/DeporCS-HUB/Backend-DeporCS-Hub/pull/1 |
+| https://github.com/DeporCS-HUB/Frontend-DeporCS-Hub | https://github.com/DeporCS-HUB/Frontend-DeporCS-Hub/pull/1 |
 
-## Schema hosted yang sudah diterapkan
+Never keep credentials in Git, reports, logs, frontend, or command-line arguments. Use secure process environment. The frontend requires no Supabase key. Do not copy passwords from chat into files.
 
-Migrasi sukses pada ref development di atas:
+## Hosted schema and users
 
-1. `supabase/migrations/20261008154150_core.sql` — versi hosted `20261008154150`, nama `core`.
-2. `supabase/migrations/20261008154204_events_profiles.sql` — versi hosted `20261008154204`, nama `events_profiles`.
+Applied migrations and matching filenames:
 
-Filename diselaraskan dengan versi migrasi yang dikembalikan connector agar migration history dan repository cocok. Jangan menjalankan ulang migrasi sebagai file versi lama.
+1. `supabase/migrations/20261008154150_core.sql` — version 20261008154150, name core.
+2. `supabase/migrations/20261008154204_events_profiles.sql` — version 20261008154204, name events_profiles.
 
-Enam tabel: profiles, programs, tasks, finances, inventory, events; seluruhnya memiliki RLS. Trigger Auth membuat profil inactive/member; metadata tidak dapat menaikkan role/active. SECURITY DEFINER bootstrap dan lookup role berada di schema `private`; dashboard RPC adalah SECURITY INVOKER. Nama metadata yang hanya whitespace dinormalisasi sebelum constraint nonblank.
+Six tables (profiles/programs/tasks/finances/inventory/events), all RLS. Internal SECURITY DEFINER bootstrap/role lookup is in private schema; dashboard RPC is SECURITY INVOKER. Profile bootstrap is inactive/member, ignores role/active metadata, and normalizes whitespace names. Do not rerun migrations under old filenames.
 
-Tidak ada seed permanen atau akun uji permanen. Jangan pernah menjalankan `supabase/tests/bootstrap.sql` pada hosted Supabase; itu harness Auth lokal.
+The user created two confirmed development Auth accounts. Their supplied UUID/email mappings were verified before trusted SQL promotion: staff+active and member+active. Both now remain active/confirmed with original names. Credentials and personal identifiers are not stored here; request secure environment configuration for future tests, never passwords in chat. No service-role/admin key was needed for the application tests.
 
-## Implementasi
+## Current evidence
 
-Backend Java 21 / Spring Boot 3.5.7: Supabase Auth memverifikasi token lewat `/auth/v1/user`; refresh cookie HttpOnly, access token frontend hanya di memori, mutasi Auth membatasi Origin. Data API selalu memakai user JWT dan public key, bukan service-role bypass. CRUD programs/tasks/finances/inventory/events, dashboard RPC, profil nama sendiri, validasi DTO/FK, serta role/ownership sudah diimplementasikan.
+- `mvn verify`: **42 passing Java tests**, 31 mock API/security plus 11 simulated HTTP adapter tests.
+- `scripts/integration-hosted.py`: **49 real Auth/Java/PostgREST checks passed**, using actual hosted services and user JWTs.
+- Staff/member login and trusted-profile lookup; HttpOnly cookie headers; all five resource CRUD and cross-request PostgREST persistence; dashboard totals; member ownership/management restrictions; direct RLS and role-grant protections; profile self-edit; FK conflict; real refresh rotation; logout and revoked refresh reuse.
+- Cleanup SQL: Auth users/profiles 2/2, all five resource tables empty, test-account sessions 0, original profile names restored. No seed or permanent fixture data remains.
+- Earlier local+hosted transactional SQL RLS suites passed with simulated JWT claims, and 15 read-only HTTP/API checks passed. SQL suites require an empty disposable DB; do not rerun them on this now-populated Auth project. Never run `supabase/tests/bootstrap.sql` on hosted Supabase.
+- Previous frontend tests: 10 unit and 7 mocked-API browser flows. Real React/browser reload and browser cookie-policy behavior are still untested.
 
-React 19 + Vite: login/session/protected routes, CRUD layar utama, refresh tersinkron, loading/empty/error/pagination. Events mencatat izin secara manual. Team read-only. Belum tersedia undangan, attendance, role admin UI, attachment, notifikasi, bahasa/theme, pengiriman izin eksternal, atau penanganan konflik edit bersamaan.
+Live integration found two adapter issues, now fixed: Auth 403/bad_jwt maps to 401 for session handling; HttpURLConnection rejected PATCH and is replaced with Java HttpClient/JdkClientHttpRequestFactory. PATCH regression verifies method/body/user token. Configurable connect/read timeouts default 5000/10000 ms, acceptance harness uses 15000/30000 ms, range 1–120000. Debug transport logs contain only exception class names.
 
-## Validasi dan batas
+## Advisors and limits
 
-- Kedua migrasi dan dua suite SQL RLS lulus di PGlite lokal.
-- Kedua suite RLS juga lulus pada PostgreSQL hosted development. Fixtures Auth/profil/data dibuat dalam transaksi dan seluruhnya di-rollback; JWT claims disimulasikan sebagai role SQL, bukan login Supabase nyata. Suite mensyaratkan database development kosong sebelum fixture dimulai.
-- Pengujian mencakup staff CRUD, member/ownership, role escalation, inactive accounts, anon access, own-profile updates, event permissions, tanggal/quantity, foreign keys, dan agregasi 1.002 task. Metadata whitespace/spoof role/active juga diperiksa.
-- Script read-only readiness lulus 15 pemeriksaan HTTP/API nyata: Auth settings, anon denial pada enam tabel/RPC, backend health, authentication required, invalid login/token/refresh melalui Java adapter, penghapusan cookie refresh kosong, dan Origin rejection. Tidak ada akun/data dibuat oleh script. Login/CRUD/refresh positif tetap belum terbukti.
-- Security advisor tidak menemukan lint keamanan. Performance advisor: 4 FK created_by belum memiliki covering index; 9 policy masih mengevaluasi auth.uid per baris; unused-index INFO pada database baru bukan alasan menghapus indeks. Temuan ini belum diubah oleh migrasi tambahan. Lihat docs/live-development-validation.md pada backend.
-- Hosted Auth reachable, email signups aktif dan konfirmasi email tetap diwajibkan. Tidak ada service-role/admin key atau akun staff/member terverifikasi di runtime. Login sukses, authenticated PostgREST CRUD/persistensi, refresh sesi sukses, dan logout nyata belum terbukti.
-- Validasi Java terkini: `mvn verify` lulus 41 tests (31 mocked API/security + 10 simulated Auth/REST HTTP adapter), termasuk pemetaan Auth 403 bad_jwt menjadi 401 tanpa mengubah 403 permission/data. Validasi implementasi sebelumnya: 37 Java tests (mock API / simulated Auth HTTP), 10 frontend unit tests, 7 browser tests menggunakan mocked API. Hasil itu bukan bukti integrasi Auth hosted positif.
+Latest security advisor: one warning, leaked-password protection disabled. Supabase documents this as Pro+; keep Free/$0, do not upgrade. Remediation: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection . No evidence establishes that the chosen test passwords leaked.
 
-## Melanjutkan
+Performance inspection: four created_by FKs lack indexes and nine RLS policies reevaluate auth.uid per row. Follow-up optimization has not been applied. Unused-index INFO on the fresh DB did not justify removal. See backend docs/live-development-validation.md for links/evidence/limits.
 
-1. Buat dua akun **development** melalui Supabase Auth dashboard/admin resmi; verifikasi email. Entry password harus dilakukan pengguna sendiri. Jangan menonaktifkan email confirmation untuk melewati provisioning.
-2. Identifikasi UUID akun yang memang untuk staff/member sebelum aktivasi. Operator SQL terpercaya dapat menetapkan staff + active atau member + active pada UUID yang ditentukan, tanpa mengganti akun lain. Jangan percaya role/active dari user_metadata.
-3. Pasang SUPABASE_URL dan SUPABASE_ANON_KEY dalam environment backend; simpan password akun uji secara aman pada environment pengguna. APP_ALLOWED_ORIGINS=http://localhost:3000, APP_COOKIE_SECURE=false untuk HTTP lokal.
-4. Jalankan Java backend dan React UI. Uji login → dashboard → CRUD sesuai role → reload → refresh → logout dengan akun yang terverifikasi; bedakan ini dari tes RLS SQL.
-5. Read-only HTTP/backend readiness tersedia di backend: `python scripts/verify-hosted-readiness.py` setelah `mvn verify`; script hanya menerima ref development yang diizinkan dan tidak membuat akun/data. JAVA_HOME opsional. Script tidak membuktikan login/CRUD positif.
-6. Tinjau performance advisor sebelum beban besar; buat migrasi baru melalui Supabase CLI, jangan mengedit migration history hosted. Jangan upgrade plan.
-7. Perbarui draft PR dan hasil validasi. Merge/deploy tetap memerlukan instruksi terpisah.
+Logout proof concerns refresh revocation; copied access JWTs may last until expiry. Roles/activation are rechecked on data access. No production deployment or merge. Commits skip new Actions runs for the zero-cost constraint; actual evidence is local tests and hosted API/SQL.
 
-Riwayat chat dan sesi browser lokal tidak ikut berpindah melalui dokumen ini. Login Chrome pengguna tidak otomatis mengautentikasi cloud browser. Connector Supabase bekerja; dashboard cloud login sebelumnya terhalang Google 502.
+## Implementation and next work
+
+Backend Java 21/Spring Boot 3.5.7; React 19/Vite. Protected Auth/session cookies, role-aware CRUD, server/SQL validation, dashboard RPC, events with manual permit records, own-profile settings, read-only Team. Missing: invitations, attendance, role admin UI, attachments, notifications, preferences, external permit delivery, concurrent-edit conflict handling.
+
+Future API acceptance: configure SUPABASE_URL/SUPABASE_ANON_KEY plus DEPOR_TEST_STAFF_EMAIL/PASSWORD/UUID and DEPOR_TEST_MEMBER_EMAIL/PASSWORD/UUID in secure environment; run mvn verify then python scripts/integration-hosted.py. The script only accepts the authorized development ref, creates/removes its own fixtures, restores profile name, and logs out. It never creates/deletes users or changes roles. Read-only smoke: python scripts/verify-hosted-readiness.py.
+
+Next useful validation is real React/browser acceptance (login → CRUD → reload → refresh → logout) against this development backend, without deploying production. Backend defaults 8080, frontend 3000, allowed origin http://localhost:3000 and secure-cookie false for HTTP local. Preserve HTTPS/secure cookies for cloud. Review performance with a new CLI-generated migration when authorized; keep existing migration history intact.
+
+History/browser sessions do not transfer via this document. Chrome login does not automatically authenticate cloud browser. Supabase connector works; earlier cloud dashboard login was blocked by a Google network 502. User provisioned Auth accounts through their own authenticated dashboard.
