@@ -121,7 +121,7 @@ Local implementation validation used PGlite's PostgreSQL runtime with the same h
 
 ## Events and profile settings
 
-`supabase/migrations/20261008154204_events_profiles.sql` adds event schedules, program relationships, venue and permit tracking, and an own-profile name update policy. It is additive and must be reviewed/applied after the core migration. The new nonblank profile-name constraint deliberately fails if existing names contain only spaces; inspect and reconcile those records before applying. Both migrations were applied to the authorized hosted development project and exercised by transactional RLS suites there, as well as local PGlite/previous CI. No production deployment or merge was performed.
+`supabase/migrations/20261008154204_events_profiles.sql` adds event schedules, program relationships, venue and permit tracking, and an own-profile name update policy. It is additive and must be reviewed/applied after the core migration. The new nonblank profile-name constraint deliberately fails if existing names contain only spaces; inspect and reconcile those records before applying. Both migrations were applied to the authorized hosted development project and exercised by transactional RLS suites there, as well as local PGlite/previous CI. At the integration-test checkpoint, no deployment or merge had occurred. Both PR #1s are now merged; hosting remains pending.
 
 Event date ranges and statuses are validated by Java and PostgreSQL. Active members can read events; staff/admin can create, edit, and delete them. Event lists sort by start date. Linked events prevent deletion of their program. Permit status is an internal record entered by staff after confirmation from the venue operator; there is no external application, notification, or approval delivery workflow.
 
@@ -160,3 +160,9 @@ It logs in through real Supabase Auth, creates/updates/deletes its own fixture r
 The Supabase adapter uses Java HttpClient through Spring JdkClientHttpRequestFactory, which supports the PATCH requests used by PostgREST edits. A regression test checks the actual HTTP method, JSON body, and user-token header; the previous HttpURLConnection transport rejected PATCH with ProtocolException.
 
 Current positive hosted acceptance passed 49 checks and mvn verify passed 42 Java tests. Both user-provisioned test accounts are confirmed/active; all fixture records and test sessions were removed. Real React browser acceptance remains separate. See docs/live-development-validation.md for the latest Auth/performance advisories and validation limits.
+
+## Vercel hosting
+
+The user selected Vercel on 9 October 2026. The repository is public and PR #1 is merged. Root Dockerfile.vercel uses the same Java 21/Maven build and unprivileged JRE runtime as Dockerfile. Set **PORT=8080 in the Vercel project environment**, alongside Supabase development configuration and exact HTTPS CORS/cookie settings. Vercel's default container routing port is 80, so EXPOSE alone is insufficient.
+
+Use only a verified Hobby/$0 account. No live Vercel deployment is recorded yet. See [Vercel deployment](docs/vercel-deployment.md) for access, environment, pricing checks and acceptance; Docker/live browser validation is pending.
