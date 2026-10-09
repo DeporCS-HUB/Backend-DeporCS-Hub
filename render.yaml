@@ -2,6 +2,9 @@ services:
   - type: web
     name: depor-hub-api
     runtime: docker
+    plan: free
+    branch: main
+    autoDeployTrigger: off
     healthCheckPath: /api/health
     envVars:
       - key: SUPABASE_URL

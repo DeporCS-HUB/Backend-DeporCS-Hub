@@ -6,7 +6,7 @@ Checkpoint: 2026-10-08 23:55 WIB. Read AGENTS.md and README.md before continuing
 
 Development is **DeporCS HUB**, ref `dajpnhkutkhgxwkjzvpg`, URL `https://dajpnhkutkhgxwkjzvpg.supabase.co`, organization **DeporCS Hub** `jvdgogmbphotxdzrvbvc`. Plan Free is verified. Only Free/$0 features are authorized; no upgrades, paid branching, compute/add-ons, or new provisioning.
 
-The user explicitly reclassified this formerly protected ref as development, authorized migrations core/events_profiles, and revoked its former production restriction. Do not modify other production projects. Work on `codex/supabase-main-flows`; draft PR #1 in each repo remains unmerged. No deployment/merge is authorized.
+The user explicitly reclassified this formerly protected ref as development, authorized migrations core/events_profiles, and revoked its former production restriction. Do not modify other production projects. Implementation work is on `codex/supabase-main-flows`. The user authorized merge and Free/$0 deployment on 9 October 2026; see the current authorization below.
 
 | Repository | Draft PR |
 | --- | --- |
@@ -43,7 +43,7 @@ Latest security advisor: one warning, leaked-password protection disabled. Supab
 
 Performance inspection: four created_by FKs lack indexes and nine RLS policies reevaluate auth.uid per row. Follow-up optimization has not been applied. Unused-index INFO on the fresh DB did not justify removal. See backend docs/live-development-validation.md for links/evidence/limits.
 
-Logout proof concerns refresh revocation; copied access JWTs may last until expiry. Roles/activation are rechecked on data access. No production deployment or merge. Commits skip new Actions runs for the zero-cost constraint; actual evidence is local tests and hosted API/SQL.
+Logout proof concerns refresh revocation; copied access JWTs may last until expiry. Roles/activation are rechecked on data access. At the API-test checkpoint, no deployment or merge had occurred. Commits skip new Actions runs for the zero-cost constraint; actual evidence is local tests and hosted API/SQL.
 
 ## Implementation and next work
 
@@ -54,3 +54,11 @@ Future API acceptance: configure SUPABASE_URL/SUPABASE_ANON_KEY plus DEPOR_TEST_
 Next useful validation is real React/browser acceptance (login → CRUD → reload → refresh → logout) against this development backend, without deploying production. Backend defaults 8080, frontend 3000, allowed origin http://localhost:3000 and secure-cookie false for HTTP local. Preserve HTTPS/secure cookies for cloud. Review performance with a new CLI-generated migration when authorized; keep existing migration history intact.
 
 History/browser sessions do not transfer via this document. Chrome login does not automatically authenticate cloud browser. Supabase connector works; earlier cloud dashboard login was blocked by a Google network 502. User provisioned Auth accounts through their own authenticated dashboard.
+
+## Merge/deployment authorization — 9 October 2026
+
+The user explicitly requested merge through deployment. This supersedes the earlier requirement to wait for new merge/deploy instructions. Both PR #1s may be merged after checks; deployment remains limited to Free/$0 services and the already authorized development database. Render hosting is configured but no service or live URL is verified yet. The Render plugin must be installed and connected before hosted service inspection/provisioning can continue; the local execution environment is offline.
+
+The backend Blueprint now explicitly sets plan: free; omitting plan would select paid compute for a new web service. Both Blueprints target main with autoDeployTrigger: off to avoid uncontrolled builds. Merge/commit messages use [skip ci] and [skip render] to avoid automatic runs until hosting/account cost checks are complete. Neither setting blocks an explicitly requested manual deployment.
+
+Before provisioning, verify a no-cost Render workspace, remaining free usage and a billing setup that cannot charge overages. Free compute alone does not guarantee a $0 bill: Render can charge excess bandwidth/build usage when a payment method exists. Do not add a payment method or upgrade. Review backend docs/deployment.md for the deployment sequence and acceptance checks. The previous 42 Java/49 hosted API results remain valid; real hosted browser acceptance is still pending.
