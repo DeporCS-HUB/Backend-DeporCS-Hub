@@ -9,3 +9,5 @@ Baca `CODEX_HANDOFF.md` dan `README.md` sebelum melanjutkan proyek ini.
 - Jangan menyimpan kredensial dalam repository, dokumen, log, atau frontend. Gunakan environment backend.
 - Jangan jalankan `supabase/tests/bootstrap.sql` pada hosted Supabase; file ini hanya harness database lokal sementara.
 - Pertahankan perubahan pengguna dan laporkan batas validasi secara akurat: tes mock/lokal tidak membuktikan integrasi hosted.
+
+- Target hosting terkini adalah Vercel, dipilih pengguna pada 9 Oktober 2026. Kedua repo public dan PR #1 sudah merged. Verifikasi akun Hobby/$0 dan penggunaan aktual sebelum deploy; file Render adalah alternatif yang belum dipakai. Jangan provision dua provider.

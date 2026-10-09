@@ -8,7 +8,7 @@ Development is **DeporCS HUB**, ref `dajpnhkutkhgxwkjzvpg`, URL `https://dajpnhk
 
 The user explicitly reclassified this formerly protected ref as development, authorized migrations core/events_profiles, and revoked its former production restriction. Do not modify other production projects. Implementation work is on `codex/supabase-main-flows`. The user authorized merge and Free/$0 deployment on 9 October 2026; see the current authorization below.
 
-| Repository | Draft PR |
+| Repository | Merged PR #1 |
 | --- | --- |
 | https://github.com/DeporCS-HUB/Backend-DeporCS-Hub | https://github.com/DeporCS-HUB/Backend-DeporCS-Hub/pull/1 |
 | https://github.com/DeporCS-HUB/Frontend-DeporCS-Hub | https://github.com/DeporCS-HUB/Frontend-DeporCS-Hub/pull/1 |
@@ -62,3 +62,11 @@ The user explicitly requested merge through deployment. This supersedes the earl
 The backend Blueprint now explicitly sets plan: free; omitting plan would select paid compute for a new web service. Both Blueprints target main with autoDeployTrigger: off to avoid uncontrolled builds. Merge/commit messages use [skip ci] and [skip render] to avoid automatic runs until hosting/account cost checks are complete. Neither setting blocks an explicitly requested manual deployment.
 
 Before provisioning, verify a no-cost Render workspace, remaining free usage and a billing setup that cannot charge overages. Free compute alone does not guarantee a $0 bill: Render can charge excess bandwidth/build usage when a payment method exists. Do not add a payment method or upgrade. Review backend docs/deployment.md for the deployment sequence and acceptance checks. The previous 42 Java/49 hosted API results remain valid; real hosted browser acceptance is still pending.
+
+## Current hosting checkpoint — 9 October 2026
+
+Both repository PR #1s are merged into main and both repositories are verified public after the user changed visibility. The user selected Vercel for the Java backend. Vercel Container Images now support Java/Spring Boot through root Dockerfile.vercel; use the project environment PORT=8080 to match Spring and container routing. The frontend has Vercel Vite/SPA configuration and requires its actual VITE_API_URL at build time.
+
+Vercel is the current hosting target. Earlier Render configuration is an unused alternative; do not provision both. Merge/deployment is authorized only within Free/$0. Install/connect the Vercel plugin, verify the actual Hobby team, feature availability and usage/billing before creating/deploying projects. No Vercel deployment or live URL is verified yet. See backend docs/vercel-deployment.md for runtime environment and acceptance steps.
+
+These final hosting changes retain the existing Java Docker build and frontend application code. Configuration structure and persisted file contents are checked; no new Docker/build/browser run is available while the execution environment is offline. Previous 42 Java/49 hosted API checks remain separate evidence.
