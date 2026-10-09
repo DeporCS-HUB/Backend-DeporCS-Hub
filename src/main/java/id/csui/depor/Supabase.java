@@ -50,7 +50,7 @@ public class Supabase {
   UUID id;
   try { id=UUID.fromString(user.path("id").asText()); } catch(IllegalArgumentException e) { throw new ApiException(401,"UNAUTHENTICATED","Token tidak valid."); }
   JsonNode rows=request(HttpMethod.GET,"/rest/v1/profiles?id=eq."+id+"&select=id,name,role,active",token,null);
-  if(!rows.isArray() || rows.size()!=1 || !rows.get(0).path("active").asBoolean()) throw new ApiException(403,"INACTIVE_PROFILE","Profil belum aktif. Hubungi admin.");
+  if(!rows.isArray() || rows.size()!=1 || !rows.get(0).path("active").asBoolean()) throw new ApiException(403,"INACTIVE_PROFILE","Profil belum aktif. Hubungi BPH.");
   JsonNode profile=rows.get(0);String role=profile.path("role").asText();
   if(!Set.of("member","staff","admin").contains(role)) throw new ApiException(403,"FORBIDDEN","Role tidak valid.");
   return new Principal(id,role,profile.path("name").asText(),token);
