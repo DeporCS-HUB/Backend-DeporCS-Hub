@@ -70,3 +70,15 @@ Both repository PR #1s are merged into main and both repositories are verified p
 Vercel is the current hosting target. Earlier Render configuration is an unused alternative; do not provision both. Merge/deployment is authorized only within Free/$0. Install/connect the Vercel plugin, verify the actual Hobby team, feature availability and usage/billing before creating/deploying projects. No Vercel deployment or live URL is verified yet. See backend docs/vercel-deployment.md for runtime environment and acceptance steps.
 
 These final hosting changes retain the existing Java Docker build and frontend application code. Configuration structure and persisted file contents are checked; no new Docker/build/browser run is available while the execution environment is offline. Previous 42 Java/49 hosted API checks remain separate evidence.
+
+## UI and BPH/Staff adjustment — 9 October 2026
+
+User requested feature adjustment, removal of unattractive stickers, two product roles (BPH and Staff as executing members), and explicitly deferred database population.
+
+This iteration derives a trusted API departmentRole from existing profile.role: staff/admin -> bph (BPH), member -> staff (Staff). Legacy stored roles and RLS are unchanged; no migration, account promotion, seed, or business-data write is part of this release. Product labels and controls use the same mapping, including an old-backend fallback. Self-promotion remains forbidden. Team remains read-only.
+
+Dashboard/inventory emoji stickers are removed, inventory editing preserves existing hidden emoji values, dashboard links reflect the role, and Team has name/role filters. Staff task assignment remains self-only.
+
+The user reported successful Vercel deployment and login at https://depor-cs-hub-web.vercel.app and backend https://depor-cs-hub-api.vercel.app. The current Vercel plugin cannot inspect those projects/deployments; do not confuse user-reported success with automated hosted acceptance. Exact backend allowed origin is https://depor-cs-hub-web.vercel.app. Free/$0 remains required.
+
+CI validation for this iteration is recorded in the associated PRs. Local execution is offline. Backend docs/role-adjustment.md explains the compatibility contract, permissions, deployment order and test limits.

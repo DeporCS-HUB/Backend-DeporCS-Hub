@@ -2,6 +2,11 @@
 
 Java 21 + Spring Boot 3.5.7. Supabase provides PostgreSQL, Auth, and PostgREST. The Node.js implementation has been replaced. The companion UI is `DeporCS-HUB/Frontend-DeporCS-Hub`.
 
+
+## Current department roles
+
+The UI uses **BPH** (management) and **Staff** (executing members). The backend returns a trusted departmentRole while keeping stored legacy profile.role values compatible with existing accounts and RLS: staff/admin -> BPH, member -> Staff. Database population is deferred. See [role adjustment](docs/role-adjustment.md) for permissions and rollout.
+
 ## Local startup
 
 Install Java 21 and Maven 3.9+. Set environment values through your development/cloud environment; Spring does not automatically load `.env` files.
@@ -66,7 +71,7 @@ There is no automatic production migration, reset, seed, role promotion, or depl
 - User metadata, request-supplied roles, and client UI controls cannot grant privileges. Profiles' role/active flags have no authenticated update grant. `PUT /api/profiles/me` permits updating only the caller's display name. RLS and column grants prevent changes to other accounts, roles, activation, or identity. A trusted database operator manages roles; profile role administration is not exposed through the UI.
 - All data requests use the user's JWT and the anon API key, **not** a privileged database bypass. RLS rechecks active membership and ownership in the database.
 
-| Operation | member | staff/admin |
+| Operation | Staff (legacy member) | BPH (legacy staff/admin) |
 | --- | --- | --- |
 | Read dashboard, programs, tasks, finances, inventory, profiles | Yes, active profile required | Yes |
 | Program, finance, inventory, event create/update/delete | No | Yes |

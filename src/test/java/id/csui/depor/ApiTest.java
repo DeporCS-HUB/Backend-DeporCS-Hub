@@ -29,7 +29,7 @@ class ApiTest {
  @Test void invalidTokenFailsClosed() throws Exception {when(db.authenticate("forged")).thenThrow(new ApiException(401,"UNAUTHENTICATED","Invalid"));mvc.perform(get("/api/dashboard").header("Authorization","Bearer forged")).andExpect(status().isUnauthorized());}
  @Test void memberCannotWriteProgram() throws Exception {mvc.perform(post("/api/programs").header("Authorization","Bearer member-token").contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isForbidden());verify(db,never()).request(any(),any(),any(),any());}
  @Test void memberCannotDeleteFinance() throws Exception {mvc.perform(delete("/api/finances/"+row).header("Authorization","Bearer member-token")).andExpect(status().isForbidden());}
- @Test void validSessionUsesTrustedProfile() throws Exception {mvc.perform(get("/api/auth/session").header("Authorization","Bearer member-token")).andExpect(status().isOk()).andExpect(jsonPath("$.data.role").value("member"));}
+ @Test void validSessionUsesTrustedProfile() throws Exception {mvc.perform(get("/api/auth/session").header("Authorization","Bearer member-token")).andExpect(status().isOk()).andExpect(jsonPath("$.data.role").value("member")).andExpect(jsonPath("$.data.departmentRole").value("staff"));}
  @Test void staffInvalidProgramRejectedBeforeDatabase() throws Exception {mvc.perform(post("/api/programs").header("Authorization","Bearer staff-token").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"\",\"pic\":\"Staff\",\"start_date\":\"2026-10-09\",\"end_date\":\"2026-10-08\",\"status\":\"Planning\",\"progress\":101,\"budget\":-1}")).andExpect(status().isBadRequest());verify(db,never()).request(any(),any(),any(),any());}
  @Test void unknownRoleInputRejected() throws Exception {mvc.perform(post("/api/tasks").header("Authorization","Bearer member-token").contentType(MediaType.APPLICATION_JSON).content(task("null").replace("\"title\"","\"role\":\"admin\",\"title\""))).andExpect(status().isBadRequest());}
  @Test void memberCannotAssignTaskToOthers() throws Exception {mvc.perform(post("/api/tasks").header("Authorization","Bearer member-token").contentType(MediaType.APPLICATION_JSON).content(task("\""+other+"\""))).andExpect(status().isForbidden());verify(db,never()).request(any(),any(),any(),any());}
@@ -46,7 +46,7 @@ class ApiTest {
  @Test void nonexistentDeleteDoesNotReportSuccess() throws Exception {when(db.request(eq(HttpMethod.GET),contains("/rest/v1/inventory?id=eq."),eq("staff-token"),isNull())).thenReturn(mapper.readTree("[]"));mvc.perform(delete("/api/inventory/"+row).header("Authorization","Bearer staff-token")).andExpect(status().isNotFound());verify(db,never()).request(eq(HttpMethod.DELETE),any(),any(),any());}
  @Test void dashboardCallsDatabaseRpc() throws Exception {when(db.request(eq(HttpMethod.POST),eq("/rest/v1/rpc/dashboard_stats"),eq("member-token"),any())).thenReturn(mapper.readTree("{\"summary\":{\"totalPrograms\":7}}"));mvc.perform(get("/api/dashboard").header("Authorization","Bearer member-token")).andExpect(status().isOk()).andExpect(jsonPath("$.data.summary.totalPrograms").value(7));}
  @Test void loginRequiresTrustedOrigin() throws Exception {mvc.perform(post("/api/auth/login").header("Origin","https://evil.invalid").contentType(MediaType.APPLICATION_JSON).content("{\"email\":\"staff@example.invalid\",\"password\":\"test-password\"}")).andExpect(status().isForbidden());verify(db,never()).request(any(),any(),any(),any());}
- @Test void loginSetsHttpOnlyRefreshCookie() throws Exception {when(db.request(eq(HttpMethod.POST),eq("/auth/v1/token?grant_type=password"),isNull(),any())).thenReturn(mapper.readTree("{\"access_token\":\"member-token\",\"refresh_token\":\"refresh-test\",\"expires_in\":3600}"));mvc.perform(post("/api/auth/login").header("Origin","http://localhost:3000").contentType(MediaType.APPLICATION_JSON).content("{\"email\":\"member@example.invalid\",\"password\":\"test-password\"}")).andExpect(status().isOk()).andExpect(header().string("Set-Cookie",org.hamcrest.Matchers.containsString("HttpOnly"))).andExpect(jsonPath("$.data.user.role").value("member")).andExpect(jsonPath("$.data.refresh_token").doesNotExist());}
+ @Test void loginSetsHttpOnlyRefreshCookie() throws Exception {when(db.request(eq(HttpMethod.POST),eq("/auth/v1/token?grant_type=password"),isNull(),any())).thenReturn(mapper.readTree("{\"access_token\":\"member-token\",\"refresh_token\":\"refresh-test\",\"expires_in\":3600}"));mvc.perform(post("/api/auth/login").header("Origin","http://localhost:3000").contentType(MediaType.APPLICATION_JSON).content("{\"email\":\"member@example.invalid\",\"password\":\"test-password\"}")).andExpect(status().isOk()).andExpect(header().string("Set-Cookie",org.hamcrest.Matchers.containsString("HttpOnly"))).andExpect(jsonPath("$.data.user.role").value("member")).andExpect(jsonPath("$.data.user.departmentRole").value("staff")).andExpect(jsonPath("$.data.refresh_token").doesNotExist());}
  @Test void refreshRotatesCookie() throws Exception {when(db.request(eq(HttpMethod.POST),eq("/auth/v1/token?grant_type=refresh_token"),isNull(),eq(Map.of("refresh_token","old-refresh")))).thenReturn(mapper.readTree("{\"access_token\":\"member-token\",\"refresh_token\":\"new-refresh\",\"expires_in\":3600}"));mvc.perform(post("/api/auth/refresh").header("Origin","http://localhost:3000").cookie(new Cookie("depor_refresh","old-refresh"))).andExpect(status().isOk()).andExpect(header().string("Set-Cookie",org.hamcrest.Matchers.containsString("new-refresh")));}
  @Test void missingRefreshRejectedAndCookieCleared() throws Exception {mvc.perform(post("/api/auth/refresh").header("Origin","http://localhost:3000")).andExpect(status().isUnauthorized()).andExpect(header().string("Set-Cookie",org.hamcrest.Matchers.containsString("Max-Age=0")));}
  @Test void logoutRevokesThroughSupabaseAndClearsCookie() throws Exception {mvc.perform(post("/api/auth/logout").header("Origin","http://localhost:3000").header("Authorization","Bearer member-token")).andExpect(status().isOk()).andExpect(header().string("Set-Cookie",org.hamcrest.Matchers.containsString("Max-Age=0")));verify(db).request(HttpMethod.POST,"/auth/v1/logout?scope=local","member-token",null);}
@@ -78,10 +78,10 @@ class ApiTest {
  @Test void profileUpdateUsesOnlyOwnIdAndTrimmedName() throws Exception {
   String path="/rest/v1/profiles?id=eq."+uid+"&select=id,name,role";
   when(db.request(eq(HttpMethod.PATCH),eq(path),eq("member-token"),eq(Map.of("name","New Name")))).thenReturn(mapper.readTree("[{\"id\":\""+uid+"\",\"name\":\"New Name\",\"role\":\"member\"}]"));
-  mvc.perform(put("/api/profiles/me").header("Authorization","Bearer member-token").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"  New Name  \"}")).andExpect(status().isOk()).andExpect(jsonPath("$.data.name").value("New Name"));
+  mvc.perform(put("/api/profiles/me").header("Authorization","Bearer member-token").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"  New Name  \"}")).andExpect(status().isOk()).andExpect(jsonPath("$.data.name").value("New Name")).andExpect(jsonPath("$.data.departmentRole").value("staff"));
  }
  @Test void profileUpdateRejectsPrivilegeFieldsAndBlankName() throws Exception {
-  for(String body:List.of("{\"name\":\"New\",\"role\":\"admin\"}","{\"name\":\"New\",\"active\":true}","{\"name\":\"   \"}")) {
+  for(String body:List.of("{\"name\":\"New\",\"departmentRole\":\"bph\"}","{\"name\":\"New\",\"role\":\"admin\"}","{\"name\":\"New\",\"active\":true}","{\"name\":\"   \"}")) {
    mvc.perform(put("/api/profiles/me").header("Authorization","Bearer member-token").contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isBadRequest());
   }
   verify(db,never()).request(any(),any(),any(),any());
@@ -89,5 +89,17 @@ class ApiTest {
  @Test void profileWriteReturningNoRowIsFailure() throws Exception {
   when(db.request(eq(HttpMethod.PATCH),any(),eq("member-token"),any())).thenReturn(mapper.readTree("[]"));
   mvc.perform(put("/api/profiles/me").header("Authorization","Bearer member-token").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"New Name\"}")).andExpect(status().isNotFound());
+ }
+
+ @Test void managementSessionExposesBph() throws Exception {
+  mvc.perform(get("/api/auth/session").header("Authorization","Bearer staff-token"))
+   .andExpect(status().isOk()).andExpect(jsonPath("$.data.role").value("staff")).andExpect(jsonPath("$.data.departmentRole").value("bph"));
+ }
+ @Test void profileDirectoryAddsDepartmentRolesWithoutMutatingDatabaseResponse() throws Exception {
+  JsonNode profiles=mapper.readTree("[{\"id\":\""+uid+"\",\"name\":\"Manager\",\"role\":\"staff\"},{\"id\":\""+other+"\",\"name\":\"Executor\",\"role\":\"member\"}]");
+  when(db.request(eq(HttpMethod.GET),contains("/rest/v1/profiles?"),eq("member-token"),isNull())).thenReturn(profiles);
+  mvc.perform(get("/api/profiles").header("Authorization","Bearer member-token"))
+   .andExpect(status().isOk()).andExpect(jsonPath("$.data[0].departmentRole").value("bph")).andExpect(jsonPath("$.data[1].departmentRole").value("staff"));
+  assertFalse(profiles.get(0).has("departmentRole"));
  }
 }
