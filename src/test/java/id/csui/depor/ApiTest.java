@@ -102,4 +102,18 @@ class ApiTest {
    .andExpect(status().isOk()).andExpect(jsonPath("$.data[0].departmentRole").value("bph")).andExpect(jsonPath("$.data[1].departmentRole").value("staff"));
   assertFalse(profiles.get(0).has("departmentRole"));
  }
+
+ @Test void trustedPreflightIsCachedWithoutAuthentication() throws Exception {
+  mvc.perform(options("/api/dashboard").header("Origin","http://localhost:3000")
+   .header("Access-Control-Request-Method","GET").header("Access-Control-Request-Headers","authorization,content-type"))
+   .andExpect(status().isOk()).andExpect(header().string("Access-Control-Allow-Origin","http://localhost:3000"))
+   .andExpect(header().string("Access-Control-Allow-Credentials","true")).andExpect(header().string("Access-Control-Max-Age","3600"));
+  verifyNoInteractions(db);
+ }
+ @Test void untrustedPreflightStillFailsClosed() throws Exception {
+  mvc.perform(options("/api/dashboard").header("Origin","https://untrusted.example")
+   .header("Access-Control-Request-Method","GET").header("Access-Control-Request-Headers","authorization"))
+   .andExpect(status().isForbidden()).andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+  verifyNoInteractions(db);
+ }
 }

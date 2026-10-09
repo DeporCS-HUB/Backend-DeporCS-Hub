@@ -20,7 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class Security {
  @Bean SecurityFilterChain apiSecurity(HttpSecurity http,Supabase supabase,ObjectMapper mapper,@Value("${app.allowed-origins}") String origins) throws Exception {
   var allowed=Arrays.stream(origins.split(",")).map(String::trim).toList();
-  var cors=new CorsConfiguration();cors.setAllowedOrigins(allowed);cors.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));cors.setAllowedHeaders(List.of("Authorization","Content-Type"));cors.setAllowCredentials(true);
+  var cors=new CorsConfiguration();cors.setAllowedOrigins(allowed);cors.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));cors.setAllowedHeaders(List.of("Authorization","Content-Type"));cors.setAllowCredentials(true);cors.setMaxAge(3600L);
   var source=new UrlBasedCorsConfigurationSource();source.registerCorsConfiguration("/**",cors);
   var filter=new OncePerRequestFilter() {
    @Override protected void doFilterInternal(HttpServletRequest req,HttpServletResponse res,FilterChain chain) throws ServletException,IOException {

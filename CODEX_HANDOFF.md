@@ -82,3 +82,9 @@ Dashboard/inventory emoji stickers are removed, inventory editing preserves exis
 The user reported successful Vercel deployment and login at https://depor-cs-hub-web.vercel.app and backend https://depor-cs-hub-api.vercel.app. The current Vercel plugin cannot inspect those projects/deployments; do not confuse user-reported success with automated hosted acceptance. Exact backend allowed origin is https://depor-cs-hub-web.vercel.app. Free/$0 remains required.
 
 CI validation for this iteration is recorded in the associated PRs. Local execution is offline. Backend docs/role-adjustment.md explains the compatibility contract, permissions, deployment order and test limits.
+
+## Loading optimization — 9 October 2026
+
+The user reported very slow loading. Frontend route/chart splitting, removal of blocking external font CSS, a visible session-checking login form, and a bounded 30-second in-memory GET cache address startup and repeated navigation. Successful mutations and account/role changes invalidate cached reads; old-account pending reads are rejected. Backend only caches CORS preflight permissions for one hour; trusted Auth/profile checks and RLS are preserved. No hosted business-data changes or paid features.
+
+See frontend docs/loading-performance.md for behavior and validation limits. This iteration uses public-repository GitHub CI because local execution is offline. Actual CI measurements and deployment status are recorded in the PRs.
