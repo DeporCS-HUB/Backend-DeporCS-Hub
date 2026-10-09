@@ -1,0 +1,11 @@
+# Depor CS HUB
+
+Baca `CODEX_HANDOFF.md` dan `README.md` sebelum melanjutkan proyek ini.
+
+- Pada 9 Oktober 2026 pengguna meminta merge hingga deployment. Merge PR #1 backend/frontend dan deployment Free/$0 sudah diizinkan; gunakan database development di bawah dan verifikasi billing hosting sebelum provisioning.
+- Supabase harus memakai fitur Free dengan biaya tambahan $0. Verifikasi biaya aktual sebelum provisioning; jangan mengaktifkan layanan berbayar.
+- Pada 8 Oktober 2026 pengguna secara eksplisit menetapkan project `dajpnhkutkhgxwkjzvpg` sebagai development, mengizinkan migrasi `core` dan `events_profiles`, serta mencabut larangan perubahan production untuk ref ini. Semua testing hosted harus tetap memakai ref development tersebut; jangan mengubah project production lain.
+- Semua migrasi, seed, akun uji, dan perubahan data hosted hanya boleh dilakukan pada development yang identitasnya sudah diverifikasi.
+- Jangan menyimpan kredensial dalam repository, dokumen, log, atau frontend. Gunakan environment backend.
+- Jangan jalankan `supabase/tests/bootstrap.sql` pada hosted Supabase; file ini hanya harness database lokal sementara.
+- Pertahankan perubahan pengguna dan laporkan batas validasi secara akurat: tes mock/lokal tidak membuktikan integrasi hosted.
