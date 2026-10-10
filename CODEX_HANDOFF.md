@@ -1,5 +1,12 @@
 # Depor CS HUB — development checkpoint
 
+## Program workspace — 10 October 2026
+
+The development database now contains the user-supplied program roster. Migration `20261009173515_program_workspace.sql` adds Proker/UKOR categories, multiple account-linked PJ assignments, optional progress/dates/budget, next milestones, and append-only progress history. Actual department records are stored only in development, not in this public repository. See [program workspace](docs/program-workspace.md).
+
+This checkpoint supersedes historical statements below about empty business tables and read-only Staff program access. Original Auth accounts and stored legacy roles remain unchanged. No paid resources were added.
+
+
 Checkpoint: 2026-10-08 23:55 WIB. Read AGENTS.md and README.md before continuing.
 
 ## Project and authorization

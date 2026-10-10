@@ -41,6 +41,7 @@ public class Security {
   return http.cors(c->c.configurationSource(source)).csrf(c->c.disable()).sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
    .authorizeHttpRequests(a->a.requestMatchers("/api/health","/api/auth/login","/api/auth/refresh").permitAll()
     .requestMatchers(HttpMethod.OPTIONS,"/**").permitAll()
+    .requestMatchers(HttpMethod.PUT,"/api/programs/*/progress").authenticated()
     .requestMatchers(HttpMethod.POST,"/api/programs/**","/api/finances/**","/api/inventory/**","/api/events/**").hasAnyRole("STAFF","ADMIN")
     .requestMatchers(HttpMethod.PUT,"/api/programs/**","/api/finances/**","/api/inventory/**","/api/events/**").hasAnyRole("STAFF","ADMIN")
     .requestMatchers(HttpMethod.DELETE,"/api/programs/**","/api/finances/**","/api/inventory/**","/api/events/**").hasAnyRole("STAFF","ADMIN")
