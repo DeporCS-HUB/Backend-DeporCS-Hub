@@ -1,5 +1,10 @@
 # Depor CS HUB API
 
+## Program workspace — 10 October 2026
+
+The development database now contains the user-supplied program roster. Migration `20261009173515_program_workspace.sql` adds Proker/UKOR categories, multiple account-linked PJ assignments, optional progress/dates/budget, next milestones, and append-only progress history. Actual department records are stored only in development, not in this public repository. See [program workspace](docs/program-workspace.md).
+
+
 Java 21 + Spring Boot 3.5.7. Supabase provides PostgreSQL, Auth, and PostgREST. The Node.js implementation has been replaced. The companion UI is `DeporCS-HUB/Frontend-DeporCS-Hub`.
 
 

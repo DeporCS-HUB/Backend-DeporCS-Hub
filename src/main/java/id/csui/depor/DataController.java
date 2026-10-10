@@ -16,6 +16,7 @@ public class DataController {
  @PutMapping("/events/{id}") ResponseEntity<?> eventUpdate(@PathVariable UUID id,@Valid @RequestBody Inputs.Event x,@AuthenticationPrincipal Principal p){return write("events",id,x,p);}
  @PostMapping("/programs") ResponseEntity<?> program(@Valid @RequestBody Inputs.Program x,@AuthenticationPrincipal Principal p){return write("programs",null,x,p);}
  @PutMapping("/programs/{id}") ResponseEntity<?> programUpdate(@PathVariable UUID id,@Valid @RequestBody Inputs.Program x,@AuthenticationPrincipal Principal p){return write("programs",id,x,p);}
+ @PutMapping("/programs/{id}/progress") Map<String,Object> progressUpdate(@PathVariable UUID id,@Valid @RequestBody Inputs.ProgramProgress x,@AuthenticationPrincipal Principal p){return Map.of("data",data.updateProgress(id,x,p));}
  @PostMapping("/tasks") ResponseEntity<?> task(@Valid @RequestBody Inputs.Task x,@AuthenticationPrincipal Principal p){return write("tasks",null,x,p);}
  @PutMapping("/tasks/{id}") ResponseEntity<?> taskUpdate(@PathVariable UUID id,@Valid @RequestBody Inputs.Task x,@AuthenticationPrincipal Principal p){return write("tasks",id,x,p);}
  @PostMapping("/finances") ResponseEntity<?> finance(@Valid @RequestBody Inputs.Finance x,@AuthenticationPrincipal Principal p){return write("finances",null,x,p);}
