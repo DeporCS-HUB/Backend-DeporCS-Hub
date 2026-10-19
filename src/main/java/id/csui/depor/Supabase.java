@@ -10,7 +10,7 @@ import org.springframework.web.client.*;
 @Component
 public class Supabase {
  private static final org.slf4j.Logger LOG=org.slf4j.LoggerFactory.getLogger(Supabase.class);
- private final RestClient client;
+ private final RestClient client;private final String baseUrl;
  public Supabase(String url,String key) {this(url,key,5000,10000);}
  @org.springframework.beans.factory.annotation.Autowired
  public Supabase(@Value("${app.supabase-url}") String url,@Value("${app.supabase-anon-key}") String key,
@@ -20,11 +20,12 @@ public class Supabase {
   if(connectTimeoutMs<1 || connectTimeoutMs>120000 || readTimeoutMs<1 || readTimeoutMs>120000) throw new IllegalArgumentException("Supabase timeouts must be 1–120000 milliseconds");
   var httpClient=java.net.http.HttpClient.newBuilder().connectTimeout(Duration.ofMillis(connectTimeoutMs)).build();
   var factory=new JdkClientHttpRequestFactory(httpClient);factory.setReadTimeout(Duration.ofMillis(readTimeoutMs));
+  baseUrl=url.replaceAll("/+$","");
   client=RestClient.builder().baseUrl(url).defaultHeader("apikey",key).requestFactory(factory).build();
  }
  public JsonNode request(HttpMethod method,String path,String token,Object body) {
   try {
-   var req=client.method(method).uri(path).contentType(MediaType.APPLICATION_JSON).header("Prefer","return=representation");
+   var req=client.method(method).uri(java.net.URI.create(baseUrl+path)).contentType(MediaType.APPLICATION_JSON).header("Prefer","return=representation");
    if(token!=null) req.header("Authorization","Bearer "+token);
    if(body!=null) req.body(body);
    JsonNode result=req.retrieve().body(JsonNode.class);

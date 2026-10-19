@@ -12,9 +12,9 @@ Untuk aplikasi ini, istilah hero berarti bagian atas dashboard: judul, sapaan pe
 | --- | --- |
 | Background hitam dan kartu charcoal | Pertahankan kontras antarlapisan dan border tipis |
 | Sidebar ikon yang ramping | Navigasi label + ikon di desktop; label tetap dapat diakses saat collapse |
-| KPI berukuran besar | Empat angka utama dengan label pendek dan denominator yang jelas |
+| KPI berukuran besar | Empat angka utama dengan label pendek; KPI pertama putih dengan teks gelap; denominator memakai total global |
 | Chart batang dominan | Bandingkan progres kegiatan, bukan memajang paragraf catatan |
-| Chart donut kategori | Opsi desain mendatang untuk distribusi status; implementasi kini memakai stacked bar |
+| Chart donut kategori | Donut SVG native dengan total global, angka selesai di tengah dan legend berangka |
 | Toolbar dan tabel rapat | Filter dekat data; kolom hanya informasi utama; deskripsi lewat Detail |
 | Avatar, notifikasi, pencarian global | Tidak dianggap fitur tersedia jika belum diimplementasikan |
 
@@ -41,7 +41,7 @@ Background: `--background`. Panel: `--surface`. Border: `--surface-light`. Navig
 
 ## Tata letak
 
-**Dashboard desktop:** header ringkas; empat KPI dalam satu baris; dua panel chart sejajar; distribusi status di bawah. Panel Staff boleh menggulir internal jika roster membesar. Jangan menambahkan kembali tabel tanggung jawab panjang pada dashboard.
+**Dashboard desktop:** header ringkas; empat KPI dalam satu baris; dua panel chart sejajar; distribusi status di bawah. Chart kegiatan dibatasi 320 px dan Staff 360 px dengan scroll internal berfokus keyboard. Jangan menambahkan kembali tabel tanggung jawab panjang pada dashboard.
 
 **Dashboard mobile:** KPI menjadi dua kolom; chart bertumpuk satu kolom. Label, nilai, selector, dan legend tetap terbaca pada lebar 375 px. Gunakan min-width: 0 untuk grid dan pemotongan label panjang dengan nama lengkap tetap tersedia secara aksesibel.
 
@@ -72,4 +72,4 @@ Gunakan label pada input, fokus keyboard terlihat, urutan heading jelas, dan ang
 
 ## Pemeriksaan desain
 
-Periksa desktop 1440 px dan mobile 375 px dengan data panjang, tidak ada data, null, 0, 100, dan error. Pastikan isi Detail tidak memperpanjang halaman di belakangnya. Penyesuaian visual berikutnya harus mempertahankan fungsi dan izin yang sudah berjalan.
+Periksa desktop 1440 px, tablet 768 px dan mobile 375 px dengan data panjang, tidak ada data, null, 0, 100, dan error. Pastikan isi Detail tidak memperpanjang halaman di belakangnya. Penyesuaian visual berikutnya harus mempertahankan fungsi dan izin yang sudah berjalan.

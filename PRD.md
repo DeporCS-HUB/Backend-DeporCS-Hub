@@ -31,12 +31,12 @@ Tidak ada peran produk Member terpisah. Nilai `member` dalam database tetap dipa
 | FR-07 | Inventaris dan kegiatan | Data inventaris serta jadwal/venue/izin dicatat manual oleh BPH | Ada |
 | FR-08 | Tim dan profile | Direktori tim read-only; pengguna dapat mengubah nama sendiri, bukan role/aktivasi | Ada |
 | FR-09 | Detail dan responsivitas | Deskripsi tidak ditumpuk di daftar; dialog dibatasi tinggi, bisa digulir, Escape menutup, fokus kembali ke pemicu | Ada |
-| FR-10 | Penyesuaian referensi visual | Susunan dashboard/tabel mengikuti prinsip referensi terlampir, dengan identitas Depor dan data sebenarnya | Spesifikasi lanjutan |
+| FR-10 | Penyesuaian referensi visual | Susunan dashboard/tabel mengikuti prinsip referensi terlampir, dengan identitas Depor dan data sebenarnya | Ada pada iterasi 19 Oktober 2026 |
 
 ## KPI yang dipakai
 
 - **Kegiatan selesai:** jumlah status Completed dibanding total kegiatan dari ringkasan server.
-- **Progres tercatat:** kegiatan dengan persentase bukan null dibanding kegiatan dalam daftar chart yang diterima.
+- **Progres tercatat:** kegiatan dengan persentase bukan null dibanding seluruh kegiatan yang terlihat oleh pengguna, bukan hanya pratinjau chart.
 - **Tugas selesai:** Done dibanding Done + seluruh tugas terbuka.
 - **Lewat tenggat:** tugas bukan Done dengan tanggal tenggat sebelum tanggal saat ini di Asia/Jakarta.
 
@@ -56,7 +56,7 @@ Nama, status, angka, dan tindakan utama terlihat tanpa membuka paragraf. Header 
 
 ## Batas dan non-goals saat ini
 
-Belum tersedia: undangan akun, pengelolaan role lewat UI, absensi, unggahan LPJ/lampiran, pengiriman notifikasi, izin venue eksternal, atau preferensi pengguna. Permintaan menyediakan LPJ tidak berarti fitur upload sudah ada. Mockup referensi tidak mengaktifkan search global, export, avatar upload, atau notifikasi secara otomatis.
+Belum tersedia: undangan akun, pengelolaan role lewat UI, absensi, unggahan LPJ/lampiran, pengiriman notifikasi, izin venue eksternal, atau preferensi pengguna. Permintaan menyediakan LPJ tidak berarti fitur upload sudah ada. Pencarian tiap resource sudah memakai server sebelum pagination; pencarian lintas-resource, export, avatar upload dan notifikasi belum tersedia.
 
 ## Ukuran keberhasilan
 

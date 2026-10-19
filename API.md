@@ -1,6 +1,6 @@
 # API — Depor CS HUB
 
-Kontrak ini berasal dari controller/DTO backend pada commit `445813b`. Ini API aplikasi yang sudah ada, meskipun tidak mengambil konten publik dari API pihak ketiga.
+Kontrak ini mengikuti controller/DTO backend dan iterasi 19 Oktober 2026. Ini API aplikasi yang sudah ada, meskipun tidak mengambil konten publik dari API pihak ketiga.
 
 ## Base URL, format, dan sesi
 
@@ -14,7 +14,7 @@ Kontrak ini berasal dari controller/DTO backend pada commit `445813b`. Ini API a
 Response berhasil membungkus hasil dalam `data`. List menambahkan `meta`:
 
 ```json
-{"data":[],"meta":{"page":0,"size":50}}
+{"data":[],"meta":{"page":0,"size":50,"hasMore":false}}
 ```
 
 Error:
@@ -50,9 +50,22 @@ Semua path berikut relatif terhadap `/api`.
 
 Tambahan: `GET /dashboard` dan `PUT /programs/{id}/progress`.
 
-Tidak ada GET /resource/{id}, PATCH aplikasi, search global, export, atau upload pada baseline controller ini. Backend memakai PATCH ke PostgREST secara internal; itu bukan method API publik Java.
+Tidak ada GET /resource/{id}, PATCH aplikasi, pencarian lintas-resource, export, atau upload pada baseline controller ini. Backend memakai PATCH ke PostgREST secara internal; itu bukan method API publik Java.
 
-List menerima page 0–100000, default 0; size 1–100, default 50. Frontend biasanya meminta size 100. Urutan events: start_date lalu id; resource lain: created_at desc lalu id. API belum menerima query pencarian/status/sort khusus. Filter UI berlaku pada halaman yang sudah dimuat.
+List menerima page 0–100000, default 0; size 1–100, default 50. Urutan events: start_date lalu id; resource lain: created_at desc lalu id. Backend mengambil satu row tambahan untuk `meta.hasMore`, lalu mengembalikan paling banyak size row. Tidak ada total count list. Parameter yang tidak didukung atau enum tidak valid menghasilkan 400.
+
+`q` mencari substring literal tanpa membedakan huruf besar/kecil, maksimum 120 karakter setelah trim, tanpa control character. `%`, `_`, `*`, koma, tanda kutip, dan karakter regex diperlakukan sebagai teks. Semua filter diterapkan sebelum pagination, tetap memakai JWT/RLS pengguna. Sort dan operator database tidak boleh dipasok client.
+
+| Resource | Kolom pencarian q | Filter tambahan |
+| --- | --- | --- |
+| programs | name, pic, description, progress_notes | status, kind |
+| tasks | title, description | status, priority |
+| events | name, venue, description | status, permit_status |
+| inventory | name, category, location | status |
+| finances | description, category | status, type |
+| profiles | name | departmentRole=bph atau staff |
+
+Contoh: `GET /programs?q=latihan&kind=UKOR&page=0&size=10`. Nilai enum mengikuti DATA.md. departmentRole bph dipetakan ke role lama staff/admin; staff ke member. Tidak ada perubahan hak akses.
 
 Create menghasilkan 201. Edit/delete berhasil menghasilkan 200. Delete mengembalikan `{"data":{"deleted":true}}`. Operasi yang tidak menemukan record/hasil write kosong tidak boleh dianggap sukses.
 
@@ -129,14 +142,15 @@ Tanggal berupa YYYY-MM-DD, amount/budget berupa angka JSON, dan ID berupa UUID. 
 
 | Key | Isi |
 | --- | --- |
-| summary | Total/aktif/selesai program, tugas, keuangan dan aset |
+| summary | Total/aktif/selesai program, recordedPrograms (progress bukan null), tugas, keuangan dan aset |
+| programStatusCounts | Semua kegiatan, dikelompokkan kind/status/count; tidak dibatasi pratinjau |
 | overview | proker, ukor, openTasks, overdueTasks |
 | programFocus | id/name/kind/PIC/status/progress/notes/milestone; maksimum 30 |
 | staffPerformance | id/name/programs, assignedTasks, completedTasks, reviewTasks, overdueTasks, updatesLast30Days, lastUpdate |
 | monthly, inventory | Agregat keuangan bulanan dan status aset |
 | upcomingMilestones, attentionTasks, upcomingPrograms | Ringkasan pendukung yang tetap tersedia, meski tidak semuanya dipasang di dashboard UI terbaru |
 
-UI tidak boleh menyamakan jumlah pada programFocus dengan total seluruh database jika dataset melewati batas. Array programs di Staff berisi identitas kegiatan; statusnya saat ini dipetakan UI dari programFocus. Ini perlu perhatian saat daftar melebihi batas tersebut.
+KPI memakai total global dan recordedPrograms; distribusi memakai programStatusCounts. Setiap item programs pada Staff memuat id/name/kind/status/progress langsung dari seluruh assignment, termasuk kegiatan di luar programFocus. Pratinjau maksimum 30 diberi label coverage dan link daftar lengkap; tidak dipakai sebagai sumber hitungan global.
 
 ## Kode status dan error handling
 

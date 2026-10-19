@@ -4,7 +4,7 @@
 
 Data operasional disimpan di PostgreSQL Supabase, bukan hardcoded di React. Konstanta label, enum, token CSS, serta fixture pengujian boleh ada di kode; identitas akun, assignment nyata dan isi keuangan bukan fixture public.
 
-Dokumen ini menjelaskan schema dari tiga migration pada backend. Tidak ada query atau perubahan database hosted yang dijalankan untuk pembuatan paket dokumentasi ini.
+Dokumen ini menjelaskan schema dari empat migration pada backend. Migrasi dashboard_coverage diterapkan dan diverifikasi baca pada development tanggal 19 Oktober 2026; tidak mengubah record operasional.
 
 ## Entitas
 
@@ -81,7 +81,7 @@ UI mengisi 100% ketika menyimpan status Completed. Ini perilaku form saat ini, b
 
 ## Agregasi
 
-Dashboard membedakan total ringkasan server dari daftar chart maksimal 30 kegiatan. Task dan assignment diagregasi terpisah untuk menghindari penggandaan hitungan. Tugas tanpa assignee tidak dikreditkan ke individu. Cutoff tenggat dan milestone memakai Asia/Jakarta; update memakai jendela 30 hari. Hanya transaksi approved masuk angka realisasi keuangan.
+Dashboard memakai summary.recordedPrograms dan programStatusCounts untuk hitungan global. Assignment Staff membawa status/progress sendiri. programFocus tetap pratinjau maksimal 30 kegiatan; UI memberi coverage dan akses daftar lengkap saat terpotong. Null progres tidak dihitung sebagai tercatat; 0 dihitung. Task dan assignment diagregasi terpisah untuk menghindari penggandaan hitungan. Tugas tanpa assignee tidak dikreditkan ke individu. Cutoff tenggat dan milestone memakai Asia/Jakarta; update memakai jendela 30 hari. Hanya transaksi approved masuk angka realisasi keuangan.
 
 ## Migrasi dan data awal
 
@@ -90,5 +90,6 @@ Urutan migration pada repository backend:
 1. `20261008154150_core.sql`
 2. `20261008154204_events_profiles.sql`
 3. `20261009173515_program_workspace.sql`
+4. `20261019042816_dashboard_coverage.sql`
 
 Jangan mengulang migration yang sudah tercatat. `supabase/seed.sql` adalah demo lama dan dapat menggandakan data bila diulang; bukan sumber dataset departemen. Harness dan fixture SQL hanya untuk database disposable. Dokumen ini tidak membawa password, UUID roster nyata, link bukti keuangan privat, atau salinan database.

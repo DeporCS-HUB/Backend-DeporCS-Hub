@@ -25,4 +25,12 @@ class SupabaseTest {
  @Test void missingProfileFailsClosed(){reply("/auth/v1/user",200,"{\"id\":\""+uid+"\"}");reply("/rest/v1/profiles",200,"[]");server.start();assertEquals(403,assertThrows(ApiException.class,()->db.authenticate("test-token")).status);}
  @Test void foreignKeyConflictIsSanitized(){reply("/rest/v1/programs",409,"{\"code\":\"23503\",\"details\":\"private data\"}");server.start();ApiException e=assertThrows(ApiException.class,()->db.request(HttpMethod.DELETE,"/rest/v1/programs","test-token",null));assertEquals(409,e.status);assertFalse(e.getMessage().contains("private"));}
  @Test void schemaFailureIsNotEmptySuccess(){reply("/rest/v1/inventory",404,"{\"code\":\"PGRST205\"}");server.start();assertEquals(502,assertThrows(ApiException.class,()->db.request(HttpMethod.GET,"/rest/v1/inventory","test-token",null)).status);}
+
+ @Test void encodedSearchReachesHttpOnceWithUserToken() {
+  var raw=new AtomicReference<String>();
+  server.createContext("/rest/v1/programs",exchange->{raw.set(exchange.getRequestURI().getRawQuery());assertEquals("Bearer user-token",exchange.getRequestHeaders().getFirst("Authorization"));byte[] bytes="[]".getBytes(StandardCharsets.UTF_8);exchange.getResponseHeaders().add("Content-Type","application/json");exchange.sendResponseHeaders(200,bytes.length);exchange.getResponseBody().write(bytes);exchange.close();});server.start();
+  String filters=ListQuery.filters("programs",Map.of("q","100%_* \"x\", 你好"));
+  db.request(HttpMethod.GET,"/rest/v1/programs?select=*"+filters,"user-token",null);
+  assertEquals("select=*"+filters,raw.get());
+ }
 }
