@@ -61,3 +61,14 @@ Belum tersedia: undangan akun, pengelolaan role lewat UI, absensi, unggahan LPJ/
 ## Ukuran keberhasilan
 
 Uji pengguna dapat menemukan progres sebuah kegiatan, mengidentifikasi data belum diisi, dan menyimpan progres dengan akun yang berhak. Tidak ada target conversion, pertumbuhan, atau tren numerik rekaan. Pengukuran waktu penggunaan dan kepuasan belum dikumpulkan.
+
+
+## Iterasi workspace program dan pelacakan BPH — 19 Oktober 2026
+
+- Setiap Proker/UKOR memiliki URL /programs/:id dengan ringkasan, tugas terkait, timeline pembaruan dan agenda editable.
+- Hanya BPH aktif dan akun PJ yang terhubung UUID dapat membaca program dan record terkait; perubahan PJ mencabut akses. BPH mengelola profil/PJ. Tugas mandiri privat bagi owner/assignee, BPH dapat memantau semuanya.
+- Pemilihan PJ/assignee berasal dari akun aktif; teks nama bebas tidak digunakan untuk otorisasi. Assignment tugas tidak memberikan akses program.
+- BPH memantau total/status/terlambat/belum ada PJ serta beban per akun dari seluruh hasil filter. Papan/daftar, drag/drop dan kontrol status keyboard, filter program/PJ/prioritas/pencarian/tugas saya, serta pagination per kolom harus tersedia.
+- Timeline menggabungkan audit progres nyata dan catatan manual. Agenda mendukung create/edit/complete/reopen/delete dengan tanggal kosong tetap null. Tidak menambahkan data sejarah, lampiran atau komentar tugas palsu.
+- UI tetap navy dengan brand biru/merah; status memakai warna semantik. Desktop/375 px tidak overflow halaman; board boleh scroll horizontal dalam wadah. Deskripsi panjang tidak memperpanjang halaman.
+- Tidak menambah provider, layanan berbayar atau reset akun/data. LPJ dan informasi belum tersedia tetap menunggu sumber pengguna.

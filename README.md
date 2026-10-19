@@ -100,3 +100,8 @@ Mulai dari [TASKS.md](TASKS.md). Referensi dashboard baru adalah arahan desain l
 - [program workspace](docs/program-workspace.md)
 - [role adjustment](docs/role-adjustment.md)
 - [vercel deployment](docs/vercel-deployment.md)
+
+
+### Workspace program & tugas
+
+Buka **Program → Buka program** untuk Ringkasan, Tugas, Timeline dan Agenda. Akses BPH/PJ dibatasi sampai RLS. BPH memilih akun PJ melalui Kelola program & PJ; Staff hanya membaca program yang ditangani. Tugas mendukung papan/daftar, filter, pagination per kolom, drag/drop atau select status, ringkasan global dan beban per akun BPH. Tombol muat ulang mengambil data terbaru; belum ada push Realtime. Kontrak dan izin ada di API.md/DATA.md.

@@ -51,3 +51,13 @@ Route/chart splitting, penghapusan request font eksternal, form login yang terli
 ## Riwayat fondasi
 
 Migration core dan events_profiles bertanggal 2026-10-08 menyiapkan schema, RLS, Auth profile, events dan edit profile sendiri. Dokumen lama juga menyimpan bukti integrasi dengan akun uji yang kemudian diganti. Bukti historis tersebut tidak berarti akun uji lama masih aktif atau harus dibuat ulang.
+
+
+## 2026-10-19 — Workspace program dan pelacakan tugas
+
+- Halaman mandiri Proker/UKOR: Ringkasan, Tugas, Timeline, Agenda; teks panjang terbatasi dan detail lengkap dalam dialog.
+- Akses program dan record terkait dibatasi ke BPH/PJ melalui RLS; tugas mandiri privat untuk creator/assignee dan BPH. Assignment menggunakan akun aktif.
+- Agenda editable dan catatan manual append-only, digabung dengan audit progres pada timeline paginated.
+- Papan/daftar, filter program/akun/prioritas/tugas saya, beban akun BPH, count seluruh hasil filter, pagination per kolom, drag/drop/status keyboard dan refresh.
+- Status-only write dengan guard updated_at; perbaikan selected account pada opsi async dan reset cursor saat filter kembali ke nilai sebelumnya.
+- Tidak mengubah akun, assignment tersimpan, progress historis atau menambah provider/dependency berbayar.

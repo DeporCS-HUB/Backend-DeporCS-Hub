@@ -12,7 +12,9 @@ public class DataService {
  public Page list(String table,Principal p,int page,int size,java.util.Map<String,String> filters) {
   if(page<0||page>100000||size<1||size>100) throw new ApiException(400,"VALIDATION_ERROR","Pagination tidak valid.");
   String criteria=ListQuery.filters(table,filters);
-  String fields=table.equals("profiles")?"id,name,role":table.equals("programs")?"*,program_assignees(profile_id)":"*";
+  if(table.equals("tasks")&&"mine".equals(filters.get("scope")))criteria+="&assignee_id=eq."+p.id;
+  if(table.equals("profiles"))criteria+="&active=eq.true";
+  String fields=table.equals("profiles")?"id,name,role,active":table.equals("programs")?"*,program_assignees(profile_id)":"*";
   String order=table.equals("events")?"start_date.asc,id.asc":"created_at.desc,id.asc";
   JsonNode rows=db.request(HttpMethod.GET,"/rest/v1/"+table+"?select="+fields+"&order="+order+"&limit="+(size+1)+"&offset="+((long)page*size)+criteria,p.token,null);
   if(rows==null||!rows.isArray())throw new ApiException(502,"DATABASE_UNAVAILABLE","Daftar tidak dapat dimuat.");
@@ -78,6 +80,42 @@ public class DataService {
  private JsonNode addDepartmentRole(JsonNode profile) {
   if(profile instanceof ObjectNode object) object.put("departmentRole",Principal.departmentRoleOf(profile.path("role").asText()));
   return profile;
+ }
+
+ public JsonNode program(UUID id,Principal p) {
+  JsonNode rows=db.request(HttpMethod.GET,"/rest/v1/programs?id=eq."+id+"&select=*,program_assignees(profile_id)",p.token,null);
+  if(!rows.isArray()||rows.size()!=1)throw new ApiException(404,"NOT_FOUND","Program tidak ditemukan atau akses tidak tersedia.");
+  return addAssignees(rows.get(0).deepCopy());
+ }
+ public JsonNode timeline(UUID id,int page,int size,Principal p) {
+  program(id,p);if(page<0||page>100000||size<1||size>100)throw new ApiException(400,"VALIDATION_ERROR","Pagination tidak valid.");
+  JsonNode result=db.request(HttpMethod.POST,"/rest/v1/rpc/program_timeline",p.token,java.util.Map.of("p_id",id,"p_page",page,"p_size",size));
+  if(!result.isObject())throw new ApiException(404,"NOT_FOUND","Timeline tidak tersedia.");return result;
+ }
+ public Page milestones(UUID id,int page,int size,String status,Principal p) {
+  program(id,p);if(page<0||page>100000||size<1||size>100)throw new ApiException(400,"VALIDATION_ERROR","Pagination tidak valid.");
+  if(!java.util.Set.of("","Planned","Done").contains(status))throw new ApiException(400,"VALIDATION_ERROR","Status agenda tidak valid.");
+  JsonNode rows=db.request(HttpMethod.GET,"/rest/v1/program_milestones?program_id=eq."+id+"&order=due_date.asc.nullslast,id.asc&limit="+(size+1)+"&offset="+((long)page*size)+(status.isEmpty()?"":"&status=eq."+status),p.token,null);
+  if(!rows.isArray())throw new ApiException(502,"DATABASE_UNAVAILABLE","Agenda tidak dapat dimuat.");
+  var items=mapper.createArrayNode();for(int i=0;i<Math.min(size,rows.size());i++)items.add(rows.get(i));return new Page(items,rows.size()>size);
+ }
+ public JsonNode workspaceWrite(String table,UUID programId,UUID id,Object input,Principal p,boolean delete) {
+  program(programId,p);
+  String path="/rest/v1/"+table+(id==null?"":"?program_id=eq."+programId+"&id=eq."+id);
+  ObjectNode payload=mapper.valueToTree(input);
+  if(id==null){payload.put("program_id",programId.toString());payload.put("created_by",p.id.toString());}
+  JsonNode rows=db.request(delete?HttpMethod.DELETE:id==null?HttpMethod.POST:HttpMethod.PATCH,path,p.token,delete?null:payload);
+  if(!rows.isArray()||rows.size()!=1)throw new ApiException(404,"NOT_FOUND","Data tidak ditemukan atau sudah berubah.");return rows.get(0);
+ }
+ public JsonNode taskSummary(java.util.Map<String,String> filters,Principal p) {
+  ListQuery.filters("tasks",filters);
+  return db.request(HttpMethod.POST,"/rest/v1/rpc/task_summary",p.token,java.util.Map.of("p_filters",filters));
+ }
+ public JsonNode taskStatus(UUID id,Inputs.TaskStatus input,Principal p) {
+  authorize("tasks",id,p);
+  String condition=input.expected_updated_at()==null?"":"&updated_at=eq."+ListQuery.encode(input.expected_updated_at().toString());
+  JsonNode rows=db.request(HttpMethod.PATCH,"/rest/v1/tasks?id=eq."+id+condition,p.token,java.util.Map.of("status",input.status()));
+  if(!rows.isArray()||rows.size()!=1)throw new ApiException(409,"CONFLICT","Tugas berubah. Muat ulang sebelum memindahkannya.");return rows.get(0);
  }
  public JsonNode dashboard(Principal p){return db.request(HttpMethod.POST,"/rest/v1/rpc/dashboard_stats",p.token,java.util.Map.of());}
 }

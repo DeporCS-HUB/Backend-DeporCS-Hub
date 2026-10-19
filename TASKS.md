@@ -46,3 +46,15 @@ Prioritas P0 adalah langkah validasi, bukan klaim terjadi insiden. Pekerjaan bar
 ## Cara memperbarui daftar
 
 Pindahkan pekerjaan ke selesai hanya setelah ada bukti. Catat tanggal, commit/PR, pemeriksaan dan keterbatasannya. Status tidak diubah hanya karena tombol/komponen sudah dibuat atau mock test lulus.
+
+
+## Iterasi 19 Oktober 2026: workspace program
+
+- [x] Halaman program terpisah dan assignment akun aktif.
+- [x] RLS akses program/related rows BPH/PJ, pencabutan akses dan tugas mandiri privat.
+- [x] Catatan append-only, timeline paginated, agenda CRUD/complete/reopen.
+- [x] Papan/daftar, filter, drag/drop/status-only, status count global dan workload BPH, pagination per kolom serta refresh.
+- [x] SQL disposable lima suite dan Java 21 verify; browser desktop/mobile dengan API mock.
+- [ ] Hosted migration/read-only RLS dan release pipeline diverifikasi pada commit final.
+
+QA-01 login browser hosted dengan akun nyata tetap belum ditandai selesai oleh mock/simulated JWT. Tidak mereset password untuk menyelesaikan verifikasi.

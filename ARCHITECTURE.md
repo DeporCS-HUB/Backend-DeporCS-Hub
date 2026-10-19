@@ -61,4 +61,15 @@ Kredensial backend disimpan di environment terkelola. Spring tidak memuat `.env`
 
 ## Batas arsitektur dan pengujian
 
-Belum ada push Realtime, job notifikasi, file upload, conflict detection/optimistic locking, atau admin role UI. Tes mock tidak membuktikan login hosted. SQL dengan simulated JWT menguji grants/RLS, bukan validitas password/session browser. Catat bukti masing-masing tingkat secara terpisah.
+Belum ada push Realtime, job notifikasi, file upload, optimistic locking untuk edit lengkap, atau admin role UI. Tes mock tidak membuktikan login hosted. SQL dengan simulated JWT menguji grants/RLS, bukan validitas password/session browser. Catat bukti masing-masing tingkat secara terpisah.
+
+
+## Workspace program dan papan tugas
+
+Route /programs/:id dimuat terpisah dan menyediakan Ringkasan/Tugas/Timeline/Agenda. Deskripsi/catatan panjang tetap clamp tiga baris dan dialog scroll. Program tunggal dibaca dari API; hidden buttons bukan batas izin. BPH mengatur profil program/PJ; BPH/PJ dapat menambah catatan, mengelola agenda dan memperbarui progres. Scope tugas mengikuti izin program dan aturan owner.
+
+Board menggunakan lima collection paginated independen (12 kartu per kolom) dan satu summary terfilter global, dimulai paralel. Tampilan daftar 20 per halaman. Metadata akun/program dibaca paralel, memakai deduplikasi cache yang sama. Total tidak diturunkan dari page kartu. Perubahan filter mereset cursor, termasuk kembali ke filter lama. Pencarian debounce 250 ms. Route chart tidak mendapat dependency baru.
+
+Drag/drop dan select keyboard memakai endpoint status-only dengan updated_at guard opsional; respons 409 tidak dianggap sukses. Cache tetap per akun dan invalidasi setelah commit. Muat ulang hanya menghapus cache dan meminta read terbaru; belum ada push/auto-polling. Pencabutan PJ berlaku pada request API/database berikutnya; data yang telah dibaca tidak dapat ditarik kembali dari layar tanpa refresh.
+
+Migrasi dilakukan sebelum backend dan frontend baru; tidak memakai service role untuk request aplikasi dan tidak menambah layanan berbayar. Fixture hanya database disposable. Hosted RLS simulated-JWT read membuktikan kebijakan baca, bukan login Supabase Auth lewat browser.
