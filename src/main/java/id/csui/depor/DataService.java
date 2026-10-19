@@ -8,16 +8,19 @@ import org.springframework.stereotype.Service;
 public class DataService {
  private final Supabase db;private final ObjectMapper mapper;
  public DataService(Supabase db,ObjectMapper mapper){this.db=db;this.mapper=mapper;}
- public JsonNode list(String table,Principal p,int page,int size) {
+ public record Page(JsonNode rows,boolean hasMore) {}
+ public Page list(String table,Principal p,int page,int size,java.util.Map<String,String> filters) {
   if(page<0||page>100000||size<1||size>100) throw new ApiException(400,"VALIDATION_ERROR","Pagination tidak valid.");
+  String criteria=ListQuery.filters(table,filters);
   String fields=table.equals("profiles")?"id,name,role":table.equals("programs")?"*,program_assignees(profile_id)":"*";
   String order=table.equals("events")?"start_date.asc,id.asc":"created_at.desc,id.asc";
-  JsonNode rows=db.request(HttpMethod.GET,"/rest/v1/"+table+"?select="+fields+"&order="+order+"&limit="+size+"&offset="+((long)page*size),p.token,null);
-  if(table.equals("profiles") && rows.isArray()) {
-   rows=rows.deepCopy();for(JsonNode row:rows) addDepartmentRole(row);
+  JsonNode rows=db.request(HttpMethod.GET,"/rest/v1/"+table+"?select="+fields+"&order="+order+"&limit="+(size+1)+"&offset="+((long)page*size)+criteria,p.token,null);
+  if(rows==null||!rows.isArray())throw new ApiException(502,"DATABASE_UNAVAILABLE","Daftar tidak dapat dimuat.");
+  var visible=mapper.createArrayNode();
+  for(int i=0;i<Math.min(size,rows.size());i++) {
+   JsonNode row=rows.get(i).deepCopy();if(table.equals("profiles"))addDepartmentRole(row);if(table.equals("programs"))addAssignees(row);visible.add(row);
   }
-  if(table.equals("programs") && rows.isArray()) { rows=rows.deepCopy();for(JsonNode row:rows) addAssignees(row); }
-  return rows;
+  return new Page(visible,rows.size()>size);
  }
  public JsonNode write(String table,UUID id,Object input,Principal p) {
   boolean task=table.equals("tasks");

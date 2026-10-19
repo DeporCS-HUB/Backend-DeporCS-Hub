@@ -31,7 +31,7 @@ Data operasional berasal dari backend/Supabase. Hardcoded hanya sesuai untuk kon
 
 ## Fitur baseline
 
-Login dan sesi; KPI/chart dashboard; Proker/UKOR multiple PJ; update progres oleh PJ/BPH; kanban tugas; catatan keuangan; inventaris; events; direktori tim; edit nama profile sendiri. Deskripsi panjang dibaca melalui Detail.
+Login dan sesi; KPI/chart dashboard; Proker/UKOR multiple PJ; update progres oleh PJ/BPH; kanban tugas; catatan keuangan; inventaris; events; direktori tim; edit nama profile sendiri. Deskripsi panjang dibaca melalui Detail. Pencarian/filter berjalan di server untuk seluruh hasil; list dipaginasi 10 program, 12 aset, atau 20 record lainnya per halaman.
 
 Belum tersedia: upload LPJ/lampiran, undangan akun, role administration UI, absensi, notifikasi, atau pengiriman izin venue. Lihat [PRD.md](PRD.md) untuk batas implementasi.
 
@@ -95,8 +95,8 @@ Mulai dari [TASKS.md](TASKS.md). Referensi dashboard baru adalah arahan desain l
 ## Panduan implementasi lanjutan
 
 - [Checkpoint pengembangan](CODEX_HANDOFF.md)
-- [deployment](/workspace/scratch/b6f97be7f072/DeporCS-Hub-Data-API/docs/deployment.md)
-- [live development validation](/workspace/scratch/b6f97be7f072/DeporCS-Hub-Data-API/docs/live-development-validation.md)
-- [program workspace](/workspace/scratch/b6f97be7f072/DeporCS-Hub-Data-API/docs/program-workspace.md)
-- [role adjustment](/workspace/scratch/b6f97be7f072/DeporCS-Hub-Data-API/docs/role-adjustment.md)
-- [vercel deployment](/workspace/scratch/b6f97be7f072/DeporCS-Hub-Data-API/docs/vercel-deployment.md)
+- [deployment](docs/deployment.md)
+- [live development validation](docs/live-development-validation.md)
+- [program workspace](docs/program-workspace.md)
+- [role adjustment](docs/role-adjustment.md)
+- [vercel deployment](docs/vercel-deployment.md)

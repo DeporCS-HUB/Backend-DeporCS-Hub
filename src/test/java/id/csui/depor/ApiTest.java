@@ -72,7 +72,7 @@ class ApiTest {
   JsonNode payload=(JsonNode)captor.getValue();assertEquals(uid.toString(),payload.path("created_by").asText());assertFalse(payload.has("dateRangeValid"));
  }
  @Test void memberReadsEventsInDateOrder() throws Exception {
-  when(db.request(eq(HttpMethod.GET),eq("/rest/v1/events?select=*&order=start_date.asc,id.asc&limit=50&offset=0"),eq("member-token"),isNull())).thenReturn(mapper.readTree("[]"));
+  when(db.request(eq(HttpMethod.GET),eq("/rest/v1/events?select=*&order=start_date.asc,id.asc&limit=51&offset=0"),eq("member-token"),isNull())).thenReturn(mapper.readTree("[]"));
   mvc.perform(get("/api/events").header("Authorization","Bearer member-token")).andExpect(status().isOk()).andExpect(jsonPath("$.data").isArray());
  }
  @Test void profileUpdateUsesOnlyOwnIdAndTrimmedName() throws Exception {
@@ -115,5 +115,19 @@ class ApiTest {
    .header("Access-Control-Request-Method","GET").header("Access-Control-Request-Headers","authorization"))
    .andExpect(status().isForbidden()).andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
   verifyNoInteractions(db);
+ }
+
+ @Test void listUsesLookaheadWithoutLeakingExtraRowAndKeepsUserToken() throws Exception {
+  when(db.request(eq(HttpMethod.GET),contains("&limit=3&offset=2&"),eq("member-token"),isNull())).thenReturn(mapper.readTree("[{\"id\":\"a\"},{\"id\":\"b\"},{\"id\":\"lookahead\"}]"));
+  mvc.perform(get("/api/tasks").param("page","1").param("size","2").param("q","Review").param("priority","High").header("Authorization","Bearer member-token"))
+   .andExpect(status().isOk()).andExpect(jsonPath("$.data.length()").value(2)).andExpect(jsonPath("$.meta.hasMore").value(true));
+ }
+ @Test void exactLastPageDoesNotAdvertiseAnotherPage() throws Exception {
+  when(db.request(eq(HttpMethod.GET),contains("&limit=3&offset=0"),eq("member-token"),isNull())).thenReturn(mapper.readTree("[{\"id\":\"a\"},{\"id\":\"b\"}]"));
+  mvc.perform(get("/api/tasks?size=2").header("Authorization","Bearer member-token")).andExpect(status().isOk()).andExpect(jsonPath("$.meta.hasMore").value(false));
+ }
+ @Test void invalidListFilterNeverReachesDatabase() throws Exception {
+  mvc.perform(get("/api/programs?status=Done").header("Authorization","Bearer member-token")).andExpect(status().isBadRequest());
+  verify(db,never()).request(any(),any(),any(),any());
  }
 }

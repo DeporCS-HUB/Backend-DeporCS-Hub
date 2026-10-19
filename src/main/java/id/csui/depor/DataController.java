@@ -9,7 +9,7 @@ public class DataController {
  private final DataService data;public DataController(DataService data){this.data=data;}
  @GetMapping("/health") Map<String,Object> health(){return Map.of("data",Map.of("status","ok","runtime","Java 21"));}
  @GetMapping("/dashboard") Map<String,Object> dashboard(@AuthenticationPrincipal Principal p){return Map.of("data",data.dashboard(p));}
- @GetMapping({"/programs","/tasks","/finances","/inventory","/profiles","/events"}) Map<String,Object> list(jakarta.servlet.http.HttpServletRequest req,@AuthenticationPrincipal Principal p,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="50") int size){return Map.of("data",data.list(req.getRequestURI().substring(5),p,page,size),"meta",Map.of("page",page,"size",size));}
+ @GetMapping({"/programs","/tasks","/finances","/inventory","/profiles","/events"}) Map<String,Object> list(jakarta.servlet.http.HttpServletRequest req,@AuthenticationPrincipal Principal p,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="50") int size,@RequestParam Map<String,String> filters){var result=data.list(req.getRequestURI().substring(5),p,page,size,filters);return Map.of("data",result.rows(),"meta",Map.of("page",page,"size",size,"hasMore",result.hasMore()));}
  private ResponseEntity<?> write(String table,UUID id,Object body,Principal p){return ResponseEntity.status(id==null?201:200).body(Map.of("data",data.write(table,id,body,p)));}
  @PutMapping("/profiles/me") Map<String,Object> profileUpdate(@Valid @RequestBody Inputs.Profile x,@AuthenticationPrincipal Principal p){return Map.of("data",data.updateProfile(x,p));}
  @PostMapping("/events") ResponseEntity<?> event(@Valid @RequestBody Inputs.Event x,@AuthenticationPrincipal Principal p){return write("events",null,x,p);}

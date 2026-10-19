@@ -1,5 +1,12 @@
 # Depor CS HUB — development checkpoint
 
+## Iterasi implementasi — 19 Oktober 2026
+
+Filter server dan pagination exact-next untuk enam resource; dashboard global recorded/status counts; assignment Staff membawa status/progress langsung; KPI dominan dan donut; scroll chart dan halaman list pendek. Migration `20261019042816_dashboard_coverage.sql` sudah diterapkan melalui apply_migration; nama file mengikuti versi yang tercatat di hosted. Jangan mengulang atau seed.
+
+Verifikasi lokal: Java 62, frontend 23 unit + lint/build, empat suite SQL rollback dan 22 browser mock termasuk 375/768/1440 px. Hosted RPC dibaca dengan simulated JWT, bukan login Auth nyata. QA-01 menunggu kredensial uji aman; tidak reset user. Security advisor masih mencatat leaked-password protection disabled; tidak mengaktifkan fitur yang dapat mengubah biaya. Tidak ada provisioning/upgrade.
+
+
 ## Checkpoint dokumentasi — 19 Oktober 2026
 
 Sembilan dokumen proyek tersedia pada root: [AGENTS.md](AGENTS.md), [PRD.md](PRD.md), [DESIGN.md](DESIGN.md), [ARCHITECTURE.md](ARCHITECTURE.md), [DATA.md](DATA.md), [API.md](API.md), [TASKS.md](TASKS.md), [CHANGELOG.md](CHANGELOG.md), dan [README.md](README.md). README/AGENTS disesuaikan dengan repository ini; aturan development, Free/$0 dan perlindungan kredensial tetap berlaku.

@@ -49,9 +49,9 @@ Edit lengkap BPH memakai `save_program` agar record dan semua assignment tersimp
 
 ## Performa dan state
 
-Route dan finance chart dimuat terpisah. Dashboard chart memakai HTML/CSS native dan tidak memerlukan bundle chart finansial. Cache hanya di memori; error tidak dicache. Logout/perubahan akun/role membersihkan scope cache. Respons request lama dari akun sebelumnya tidak boleh masuk ke state akun baru.
+Route dan finance chart dimuat terpisah. Dashboard chart memakai HTML/CSS/SVG native dan tidak memerlukan bundle chart finansial. Cache hanya di memori; error tidak dicache. Logout/perubahan akun/role membersihkan scope cache. Respons request lama dari akun sebelumnya tidak boleh masuk ke state akun baru.
 
-Dashboard mengambil satu endpoint agregat. Daftar menggunakan pagination; filter UI saat ini berlaku pada halaman yang dimuat. `programFocus` dibatasi 30 record oleh RPC, sehingga coverage chart tidak boleh dianggap tak terbatas.
+Dashboard mengambil satu endpoint agregat. Hitungan global dan distribusi status terpisah dari programFocus (pratinjau 30). Status/progres assignment Staff berasal langsung dari join lengkap. Daftar memakai filter server sebelum pagination; pencarian didebounce 250 ms, perubahan filter kembali ke halaman 1, dan meta.hasMore dipertahankan dalam cache. Ukuran halaman: program 10, inventaris 12, lainnya 20; lookahead backend memastikan tombol berikutnya akurat tanpa count seluruh list.
 
 ## Deployment dan konfigurasi
 

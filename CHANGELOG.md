@@ -2,6 +2,15 @@
 
 Tanggal memakai YYYY-MM-DD. Entri berasal dari riwayat repository dan checkpoint percakapan yang tersedia. Tidak ada nomor versi aplikasi semantik yang direka.
 
+## 2026-10-19 — Filter server dan KPI global
+
+- Search literal dan filter tervalidasi untuk enam resource, pagination lookahead/hasMore, debounce dan reset halaman; ukuran halaman lebih pendek.
+- Migrasi dashboard_coverage: recordedPrograms dan distribusi status global, status/progress pada assignment Staff; pratinjau 30 tidak lagi menentukan hitungan global.
+- KPI utama putih, donut SVG, chart panjang dengan scroll keyboard; palet Depor dan route/chart splitting dipertahankan.
+- Tautan runbook README menjadi relatif repository.
+- Java 62 tes, 23 unit frontend, lint/build, empat suite SQL lokal dan 22 browser flow mock mencakup dataset besar serta viewport 375/768/1440.
+- Hosted: migrasi sukses dan baca RPC dengan simulated JWT diverifikasi. Login/refresh/logout hosted dengan akun BPH/Staff belum diuji karena kredensial aman tidak tersedia. Tidak ada akun, seed, atau record operasional yang dibuat/diubah untuk pengujian.
+
 ## 2026-10-19 — Integrasi dokumentasi repository
 
 ### Ditambahkan
