@@ -42,7 +42,7 @@ set local request.jwt.claim.sub='90000000-0000-0000-0000-000000000001';
 delete from public.program_assignees where profile_id='90000000-0000-0000-0000-000000000003';
 set local request.jwt.claim.sub='90000000-0000-0000-0000-000000000003';
 update public.programs set progress=100 where id='91000000-0000-0000-0000-000000000001';
-do $$begin if (select progress from public.programs where id='91000000-0000-0000-0000-000000000001')<>40 then raise exception 'removed PJ retained edit access';end if;end$$;
+do $$begin if exists(select 1 from public.programs where id='91000000-0000-0000-0000-000000000001') then raise exception 'removed PJ retained read access';end if;end$$;
 reset role;
 update public.profiles set active=false where id='90000000-0000-0000-0000-000000000003';
 set local role authenticated;

@@ -108,3 +108,12 @@ CI validation for this iteration is recorded in the associated PRs. Local execut
 The user reported very slow loading. Frontend route/chart splitting, removal of blocking external font CSS, a visible session-checking login form, and a bounded 30-second in-memory GET cache address startup and repeated navigation. Successful mutations and account/role changes invalidate cached reads; old-account pending reads are rejected. Backend only caches CORS preflight permissions for one hour; trusted Auth/profile checks and RLS are preserved. No hosted business-data changes or paid features.
 
 See frontend docs/loading-performance.md for behavior and validation limits. This iteration uses public-repository GitHub CI because local execution is offline. Actual CI measurements and deployment status are recorded in the PRs.
+
+
+## Program workspace checkpoint — 19 October 2026
+
+User requested separate program pages with timeline, todos, account assignments, and BPH/PJ-only access plus better BPH task tracking. Implemented /programs/:id with Overview/Tasks/Timeline/Agenda, real append-only notes and editable milestones. Program and related-row RLS restricts active BPH/PJ; unlinked tasks are private to creator/assignee and BPH. No changes to stored accounts/assignments/business records. A program with no PJ remains BPH-only until accounts are selected; do not infer assignments from legacy PIC text.
+
+Applied development migration 20261019074232_program_hub_access on authorized ref dajpnhkutkhgxwkjzvpg. Supabase organization Free verified. Before/after counts unchanged; hosted read-only simulated JWT confirms BPH department scope and Staff assigned scope, denied unrelated timeline and no Staff workload. Security advisor still reports the pre-existing Auth leaked-password protection warning; performance reports historical FK/initplan recommendations and unused indexes (new empty tables). No paid settings enabled.
+
+Local Java21 verify:70 tests; disposable Postgres-compatible PGlite:5 rollback suites. Frontend lint/unit/build and browser API-mock flows validated; no real hosted Auth/browser login credentials available and no resets performed. Full browser suite plus targeted bounded-board check recorded in release PR. Existing GitHub/Vercel pipeline remains the release path; connector cannot inspect actual Vercel projects, so verify commit statuses and live HTTP assets. See current PRs for final merge/deployment IDs.

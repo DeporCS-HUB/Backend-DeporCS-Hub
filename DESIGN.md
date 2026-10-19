@@ -73,3 +73,14 @@ Gunakan label pada input, fokus keyboard terlihat, urutan heading jelas, dan ang
 ## Pemeriksaan desain
 
 Periksa desktop 1440 px, tablet 768 px dan mobile 375 px dengan data panjang, tidak ada data, null, 0, 100, dan error. Pastikan isi Detail tidak memperpanjang halaman di belakangnya. Penyesuaian visual berikutnya harus mempertahankan fungsi dan izin yang sudah berjalan.
+
+
+## Halaman program dan papan tugas — 19 Oktober 2026
+
+Program memiliki header ringkas dengan jenis/status/akses dan aksi. Empat tab: Ringkasan, Tugas, Timeline, Agenda. Ringkasan dua kolom desktop: progres dan hitungan tugas di kiri, akun PJ dan agenda terdekat di kanan. Agenda Planned baru mendapat prioritas pada ringkasan; agenda lama pada profil tetap diberi label sumber. Catatan/description maksimal tiga baris dengan akses dialog lengkap. Mobile menumpuk panel.
+
+Papan tugas memakai toolbar pencarian, refresh, Papan/Daftar dan create; filter akun/program/prioritas/tugas saya; KPI actionable dengan label sesuai filter. Ringkasan beban per akun berada dalam disclosure. Setiap kolom mempunyai count global dan pagination sendiri; empty/loading/error per kolom tidak menghilangkan filter. Status tidak hanya warna: label, angka, dan select tersedia. Kartu menampilkan prioritas, judul terbatasi, program, avatar inisial akun, nama PJ, tenggat, status dan aksi; tidak menggunakan foto/stiker generatif.
+
+Drag/drop desktop adalah tambahan, select status tetap tersedia untuk keyboard/mobile. Deadline terlambat merah, Done hijau, berjalan biru, Review kuning. Board horizontal scroll di dalam kontainer, bukan overflow viewport; pada 375 px satu kartu/kolom tetap terbaca. Muat ulang menyediakan read terbaru, tanpa mengklaim Realtime.
+
+Kolom papan mempunyai tinggi terbatasi dan area kartu scroll internal. Dua belas kartu di satu status tidak memanjangkan seluruh halaman. Header hitungan dan kontrol pagination tetap di luar area scroll.

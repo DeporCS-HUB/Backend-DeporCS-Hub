@@ -4,7 +4,7 @@
 
 Data operasional disimpan di PostgreSQL Supabase, bukan hardcoded di React. Konstanta label, enum, token CSS, serta fixture pengujian boleh ada di kode; identitas akun, assignment nyata dan isi keuangan bukan fixture public.
 
-Dokumen ini menjelaskan schema dari empat migration pada backend. Migrasi dashboard_coverage diterapkan dan diverifikasi baca pada development tanggal 19 Oktober 2026; tidak mengubah record operasional.
+Dokumen ini menjelaskan schema dan migration pada backend. Migrasi dashboard_coverage diterapkan dan diverifikasi baca pada development tanggal 19 Oktober 2026; tidak mengubah record operasional.
 
 ## Entitas
 
@@ -14,6 +14,8 @@ Dokumen ini menjelaskan schema dari empat migration pada backend. Migrasi dashbo
 | `profiles` | id, name, role, active, created_at | UUID sama dengan Auth; nama, role lama, aktivasi |
 | `programs` | id, name, kind, description, pic, pic_id, status, progress, progress_notes | Satu Proker atau UKOR |
 | `program_assignees` | program_id, profile_id | Banyak PJ per kegiatan; primary key gabungan |
+| `program_notes` | id, program_id, body, created_by, created_at | Pembaruan manual append-only oleh BPH/PJ |
+| `program_milestones` | id, program_id, title, due_date, status, created_by, created_at, updated_at | Agenda/tahapan editable BPH/PJ |
 | `program_updates` | id, program_id, actor_id, status, progress, notes, created_at | Riwayat perubahan progres yang dibuat trigger |
 | `tasks` | id, title, description, program_id, assignee_id, status, priority, due_date | Tugas yang dapat berdiri sendiri atau terhubung kegiatan |
 | `finances` | id, description, program_id, type, amount, category, transaction_date, status | Catatan pemasukan/pengeluaran |
@@ -91,5 +93,19 @@ Urutan migration pada repository backend:
 2. `20261008154204_events_profiles.sql`
 3. `20261009173515_program_workspace.sql`
 4. `20261019042816_dashboard_coverage.sql`
+5. `20261019074232_program_hub_access.sql`
 
 Jangan mengulang migration yang sudah tercatat. `supabase/seed.sql` adalah demo lama dan dapat menggandakan data bila diulang; bukan sumber dataset departemen. Harness dan fixture SQL hanya untuk database disposable. Dokumen ini tidak membawa password, UUID roster nyata, link bukti keuangan privat, atau salinan database.
+
+
+## Privasi ruang kerja
+
+programs, program_assignees, program_updates, program_notes dan program_milestones hanya terlihat bagi BPH aktif atau PJ dengan UUID pada program_assignees. Helper private.can_access_program memakai auth.uid dan role aktif di schema private, security definer dengan search_path kosong; fungsi ini memutus siklus RLS program/assignment. RPC publik tetap security invoker dan memakai JWT caller.
+
+Tugas terkait serta finance/event terkait memakai batas program yang sama. Tugas tanpa program privat untuk creator/assignee, kecuali BPH. Menghapus assignment PJ mencabut akses terkait meski pernah membuat catatan/tugas. Program tanpa assignment hanya terlihat BPH. Tidak ada backfill otomatis dari teks PIC.
+
+save_program mewajibkan 1–30 akun aktif pada assignment baru/edit lengkap, memvalidasi semuanya dan menghasilkan label PIC dari nama akun. PIC text hanya kompatibilitas tampilan (maksimum 120 karakter); UUID tetap otoritatif. Assignment baru tugas terkait memerlukan akun aktif yang BPH atau PJ program; data relasi historis tidak dibersihkan/mengganti dirinya sendiri.
+
+Milestone: title 1–160 nonblank, due_date nullable, status Planned/Done. Note: body 1–2000 nonblank. Keduanya memakai FK program cascade; created_by FK profile restrict dan default auth.uid. Update milestone dibatasi kolom title/due_date/status. Notes tidak dapat diedit/dihapus client. Audit progres tetap hanya trigger; catatan manual tidak dihitung sebagai pembaruan progres dalam performa Staff.
+
+Index baru meliputi task status/due_date dan program/tanggal serta creator pada agenda/catatan. task_summary menghitung seluruh hasil filter di database; daftar tetap paginated. Tidak ada pengisian persentase otomatis dari jumlah tugas.

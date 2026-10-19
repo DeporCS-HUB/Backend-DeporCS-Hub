@@ -18,6 +18,7 @@ set local role authenticated;
 set local request.jwt.claim.sub='00000000-0000-0000-0000-000000000002';
 insert into public.programs(id,name,pic,start_date,end_date) values('10000000-0000-0000-0000-000000000001','Program','Staff',current_date,current_date);
 insert into public.events(id,name,venue,program_id,start_date,end_date) values('40000000-0000-0000-0000-000000000001','Tournament','SOR','10000000-0000-0000-0000-000000000001',current_date,current_date+1);
+insert into public.program_assignees(program_id,profile_id) values('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001');
 update public.events set permit_status='Approved' where id='40000000-0000-0000-0000-000000000001';
 do $$begin
  if (select permit_status from public.events limit 1)<>'Approved' then raise exception 'staff event update failed';end if;

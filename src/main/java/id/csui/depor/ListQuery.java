@@ -24,7 +24,7 @@ final class ListQuery {
   var allowed=new HashSet<>(List.of("page","size","q"));
   if(STATUS.containsKey(table)) allowed.add("status");
   if(table.equals("programs"))allowed.add("kind");
-  if(table.equals("tasks"))allowed.add("priority");
+  if(table.equals("tasks"))allowed.addAll(List.of("priority","program_id","assignee_id","scope"));
   if(table.equals("events"))allowed.add("permit_status");
   if(table.equals("finances"))allowed.add("type");
   if(table.equals("profiles"))allowed.add("departmentRole");
@@ -47,6 +47,18 @@ final class ListQuery {
   if(table.equals("profiles")&&!role.isBlank()) {
    if(!Set.of("bph","staff").contains(role))throw invalid();
    result.append(role.equals("bph")?"&role=in.(staff,admin)":"&role=eq.member");
+  }
+  if(table.equals("tasks")) {
+   for(String key:List.of("program_id","assignee_id")) {
+    String value=input.getOrDefault(key,"");if(!value.isEmpty()) {
+     try { if(!UUID.fromString(value).toString().equals(value))throw invalid(); }catch(IllegalArgumentException e){throw invalid();}
+     result.append('&').append(key).append("=eq.").append(value);
+    }
+   }
+   String scope=input.getOrDefault("scope","");
+   if(!Set.of("","all","mine","overdue","unassigned").contains(scope))throw invalid();
+   if(scope.equals("unassigned"))result.append("&assignee_id=is.null");
+   if(scope.equals("overdue")) result.append("&status=neq.Done&due_date=lt.").append(java.time.LocalDate.now(java.time.ZoneId.of("Asia/Jakarta")));
   }
   return result.toString();
  }

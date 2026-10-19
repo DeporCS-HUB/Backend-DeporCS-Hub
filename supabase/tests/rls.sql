@@ -48,7 +48,7 @@ end$$;
 set local request.jwt.claim.sub='00000000-0000-0000-0000-000000000001';
 do $$begin
  if private.app_role()<>'member' then raise exception 'wrong member role';end if;
- if (select count(*) from public.programs)<>1 then raise exception 'member cannot read programs';end if;
+ if exists(select 1 from public.programs) then raise exception 'unassigned member read program';end if;
  begin update public.profiles set role='admin' where id=auth.uid();raise exception 'member changed role';exception when insufficient_privilege then null;end;
  begin insert into public.programs(name,pic,start_date,end_date) values('Unauthorized','Member',current_date,current_date);raise exception 'member created program';exception when insufficient_privilege then null;end;
  begin insert into public.finances(description,type,amount,category,transaction_date) values('Unauthorized','expense',1,'Sports',current_date);raise exception 'member created finance';exception when insufficient_privilege then null;end;
@@ -63,7 +63,7 @@ do $$begin if (select status from public.tasks where id='30000000-0000-0000-0000
 delete from public.tasks where id='30000000-0000-0000-0000-000000000002';
 set local request.jwt.claim.sub='00000000-0000-0000-0000-000000000003';
 update public.tasks set status='Backlog' where id='30000000-0000-0000-0000-000000000001';
-do $$begin if (select status from public.tasks where id='30000000-0000-0000-0000-000000000001')<>'Done' then raise exception 'foreign task edited';end if;end$$;
+do $$begin if exists(select 1 from public.tasks where id='30000000-0000-0000-0000-000000000001') then raise exception 'foreign personal task visible';end if;end$$;
 reset role;
 update public.profiles set active=false where id='00000000-0000-0000-0000-000000000003';
 set local role authenticated;

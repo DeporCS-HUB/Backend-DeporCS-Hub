@@ -50,7 +50,7 @@ Semua path berikut relatif terhadap `/api`.
 
 Tambahan: `GET /dashboard` dan `PUT /programs/{id}/progress`.
 
-Tidak ada GET /resource/{id}, PATCH aplikasi, pencarian lintas-resource, export, atau upload pada baseline controller ini. Backend memakai PATCH ke PostgREST secara internal; itu bukan method API publik Java.
+GET /programs/{id} tersedia. Belum ada GET tunggal resource lain, PATCH aplikasi, export, atau upload. Backend memakai PATCH ke PostgREST secara internal; itu bukan method API publik Java.
 
 List menerima page 0–100000, default 0; size 1–100, default 50. Urutan events: start_date lalu id; resource lain: created_at desc lalu id. Backend mengambil satu row tambahan untuk `meta.hasMore`, lalu mengembalikan paling banyak size row. Tidak ada total count list. Parameter yang tidak didukung atau enum tidak valid menghasilkan 400.
 
@@ -59,7 +59,7 @@ List menerima page 0–100000, default 0; size 1–100, default 50. Urutan event
 | Resource | Kolom pencarian q | Filter tambahan |
 | --- | --- | --- |
 | programs | name, pic, description, progress_notes | status, kind |
-| tasks | title, description | status, priority |
+| tasks | title, description | status, priority, program_id, assignee_id, scope |
 | events | name, venue, description | status, permit_status |
 | inventory | name, category, location | status |
 | finances | description, category | status, type |
@@ -73,7 +73,9 @@ Create menghasilkan 201. Edit/delete berhasil menghasilkan 200. Delete mengembal
 
 | Operasi | BPH | Staff aktif |
 | --- | --- | --- |
-| Membaca data departemen | Ya | Ya |
+| Membaca program dan data terkait | Semua | Hanya program dengan UUID PJ; termasuk tugas, finance/event terkait, agenda, catatan dan audit |
+| Membaca tugas mandiri tanpa program | Semua | Creator/assignee saja |
+| Agenda dan catatan program | Kelola agenda; tambah catatan | Sama, hanya program yang ditangani |
 | CRUD program lengkap, finance, inventory, events | Ya | Tidak |
 | Update progres program | Ya | Hanya PJ yang terhubung UUID |
 | Membuat tugas | Dapat memilih assignee | Hanya untuk diri sendiri; tanpa assignee API mengisinya ke diri sendiri |
@@ -87,16 +89,14 @@ RLS dan validasi profile aktif berlaku di database. Tombol tersembunyi tidak men
 
 ### Program: POST dan PUT lengkap
 
-Field wajib: name, pic, status. Field lain: description, pic_id, start_date, end_date, progress, budget, kind, progress_notes, next_milestone, milestone_date, assignee_ids. Lihat batas/enum di [DATA.md](DATA.md).
+Field wajib: name, status, dan akun PJ aktif. Buat/edit lengkap menggunakan assignee_ids berisi 1–30 UUID; pic_id tetap fallback kompatibilitas. pic opsional dan labelnya selalu diturunkan database dari nama akun. Field lain: description, pic_id, start_date, end_date, progress, budget, kind, progress_notes, next_milestone, milestone_date, assignee_ids. Lihat batas/enum di [DATA.md](DATA.md).
 
 ```json
 {
   "name":"Kegiatan contoh",
   "kind":"Proker",
   "description":"Contoh dokumentasi, bukan data operasional.",
-  "pic":"PJ kegiatan",
-  "pic_id":null,
-  "assignee_ids":[],
+  "assignee_ids":["00000000-0000-0000-0000-000000000001"],
   "start_date":null,
   "end_date":null,
   "status":"Planning",
@@ -108,7 +108,7 @@ Field wajib: name, pic, status. Field lain: description, pic_id, start_date, end
 }
 ```
 
-Array PJ yang tidak kosong harus berisi UUID profile aktif yang benar-benar ada. Contoh di atas sengaja tidak menunjuk akun nyata. `[]` menghapus assignment pada edit; tidak mengirim/null assignment mempertahankan assignment yang ada, kecuali perubahan pic_id lama yang memicu kompatibilitas. Frontend mengirim daftar lengkap. Gunakan body lengkap untuk PUT, bukan update parsial yang diasumsikan seperti PATCH.
+UUID contoh adalah placeholder, bukan akun hosted. Ganti dengan id dari GET /profiles; directory hanya mengembalikan profile aktif. Array kosong ditolak. Omission/null pada edit mempertahankan assignment yang sudah ada; program tanpa PJ harus diberi akun terlebih dahulu. Frontend mengirim daftar lengkap. Label pic bebas tidak memberikan akses. Gunakan body lengkap untuk PUT, bukan update parsial yang diasumsikan seperti PATCH.
 
 Simpan memakai RPC save_program secara atomik. Mengosongkan catatan/agenda dari form mengirim string kosong; null/missing pada field kompatibilitas tertentu dapat mempertahankan nilai lama.
 
@@ -167,3 +167,28 @@ KPI memakai total global dan recordedPrograms; distribusi memakai programStatusC
 | 502/503 | Ketergantungan upstream tidak tersedia/response tidak valid, sesuai mapping adapter |
 
 Frontend hanya mencoba refresh pada 401, bukan pada 403. Setelah gagal simpan, pertahankan form dan data sebelumnya; setelah berhasil, invalidasi daftar dan ringkasan. Jangan menampilkan error upstream mentah, token, atau password dalam log/UI.
+
+
+## Ruang kerja program dan pelacakan tugas — 19 Oktober 2026
+
+| Method | Path | Kontrak |
+| --- | --- | --- |
+| GET | /programs/{id} | Record program dengan assignee_ids; 404 untuk tidak ada/tidak dapat dibaca |
+| GET | /programs/{id}/timeline?page=0&size=20 | data.items dan data.hasMore; gabungan audit progres dan catatan, terbaru dahulu |
+| POST | /programs/{id}/notes | body, teks nonblank maksimum 2000; author/program/waktu dikelola server |
+| GET | /programs/{id}/milestones?page=0&size=20 | data array, meta.hasMore; due_date asc null terakhir; filter status opsional Planned/Done |
+| POST | /programs/{id}/milestones | title (1–160), status Planned/Done, due_date opsional |
+| PUT | /programs/{id}/milestones/{milestoneId} | title/status/due_date lengkap; tidak dapat memindahkan program atau mengganti creator |
+| DELETE | /programs/{id}/milestones/{milestoneId} | Agenda harus milik program pada URL |
+| GET | /tasks/summary | Filter sama dengan /tasks; total/done/overdue/unassigned/statuses/workload tanpa pagination |
+| PUT | /tasks/{id}/status | status, expected_updated_at opsional (ISO Instant); hanya status dipatch |
+
+Timeline memakai id gabungan, kind=progress/note, actor_id, body, created_at, status/progress (null untuk catatan). Catatan append-only untuk client, bukan edit/hapus audit. Pagination 0–100000, size 1–100. Tanggal agenda yang belum diketahui tetap null. Endpoint anak memeriksa akses program sebelum query; RLS memeriksa lagi setiap row.
+
+Filter tugas tambahan: program_id dan assignee_id harus UUID canonical; scope kosong/all, mine, overdue atau unassigned. mine memakai identitas terverifikasi; overdue berarti status bukan Done dan due_date sebelum hari ini Asia/Jakarta. Pencarian/filter dilakukan sebelum pagination. Summary memakai filter yang sama dan RLS; workload hanya untuk BPH, berisi assignee_id,total,done,open,overdue. Null assignee adalah kelompok belum ada PJ. Tidak mengarang skor atau menghitung total dari kartu yang sedang dimuat.
+
+Tugas terkait program hanya dapat dibaca BPH/PJ. Tugas mandiri hanya BPH/creator/assignee. Mutasi Staff tetap creator/assignee dan hanya dapat memilih diri sendiri. Assignment baru/reassign harus akun aktif; untuk tugas terkait, akun harus BPH atau PJ program tersebut. Assignment tugas tidak otomatis memberi akses program. Relasi lama tidak ditulis ulang; perubahan status yang tidak mengubah relasi tetap dapat dilakukan pemilik yang berhak.
+
+Status-only update menghindari penimpaan deskripsi/assignment saat drag/drop. Jika expected_updated_at sudah berubah, hasilnya 409 dan UI meminta muat ulang. Ini bukan optimistic locking menyeluruh untuk edit lengkap/agenda. Write gagal mempertahankan status lama; tombol muat ulang adalah read/invalidation, bukan mutasi bisnis.
+
+Semua agregat dashboard sekarang mencakup row yang boleh dibaca caller: BPH seluruh departemen, Staff program yang ditangani dan tugas mandirinya. Status program, PJ dan detail tidak bocor melalui dashboard/riwayat/related tables. Directory nama akun aktif tetap tersedia untuk pilihan assignment.
