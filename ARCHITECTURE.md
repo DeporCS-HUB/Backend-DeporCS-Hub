@@ -73,3 +73,14 @@ Board menggunakan lima collection paginated independen (12 kartu per kolom) dan 
 Drag/drop dan select keyboard memakai endpoint status-only dengan updated_at guard opsional; respons 409 tidak dianggap sukses. Cache tetap per akun dan invalidasi setelah commit. Muat ulang hanya menghapus cache dan meminta read terbaru; belum ada push/auto-polling. Pencabutan PJ berlaku pada request API/database berikutnya; data yang telah dibaca tidak dapat ditarik kembali dari layar tanpa refresh.
 
 Migrasi dilakukan sebelum backend dan frontend baru; tidak memakai service role untuk request aplikasi dan tidak menambah layanan berbayar. Fixture hanya database disposable. Hosted RLS simulated-JWT read membuktikan kebijakan baca, bukan login Supabase Auth lewat browser.
+
+
+## Akun sendiri dan media profil
+
+Settings tetap route lazy, dengan kartu foto/nama/password. Avatar initial hanya meminta signed URL jika profile memiliki avatar_path; dua instance (header/Settings) dideduplikasi cache. Refresh, write berhasil, serta pergantian akun tetap mengikuti invalidasi yang ada. Tidak ada dependency gambar/SDK/chart baru.
+
+Alur foto: validasi file browser → crop/encode JPEG → API decode/dimensi/re-encode → Storage upload versi UUID dengan JWT caller → conditional update profile pointer → cleanup file lama. Compare-and-set pointer mencegah perubahan paralel menimpa foto baru. Ini bukan transaksi atomik lintas Storage/Postgres; response jaringan ambigu/cleanup gagal dapat meninggalkan objek privat yatim. Tidak menimpa atau menghapus foto lama sebelum profile commit.
+
+Alur password: Auth user terverifikasi → email server → password grant memverifikasi password saat ini → check ID sama → update password memakai token session segar → response mengganti access token/refresh cookie. Fresh sign-in menghindari ketergantungan pada toggle current-password project dan nonce sesi lama. Tidak menggunakan service role atau password SQL/RPC. Error validasi tidak menghapus sesi yang masih valid. Respons password tidak boleh mengembalikan snapshot nama/foto yang lebih lama dari perubahan lokal yang sudah terkonfirmasi.
+
+Pengujian HTTP adapter dan browser menggunakan upstream/API mock; SQL memakai stand-in Storage. Hosted config/RLS diperiksa terpisah. Mengganti password atau mengunggah foto akun nyata bukan bagian dari tes tanpa sesi/kredensial yang sesuai; jangan reset password untuk memperoleh bukti tersebut.

@@ -84,3 +84,10 @@ Papan tugas memakai toolbar pencarian, refresh, Papan/Daftar dan create; filter 
 Drag/drop desktop adalah tambahan, select status tetap tersedia untuk keyboard/mobile. Deadline terlambat merah, Done hijau, berjalan biru, Review kuning. Board horizontal scroll di dalam kontainer, bukan overflow viewport; pada 375 px satu kartu/kolom tetap terbaca. Muat ulang menyediakan read terbaru, tanpa mengklaim Realtime.
 
 Kolom papan mempunyai tinggi terbatasi dan area kartu scroll internal. Dua belas kartu di satu status tidak memanjangkan seluruh halaman. Header hitungan dan kontrol pagination tetap di luar area scroll.
+
+
+## Pengaturan akun dan status
+
+Status program utama tampil Planning / On Going / Finished. Warna semantik tetap kuning/biru/hijau; nilai legacy tidak diberi progres rekaan. Dropdown baru menawarkan tiga status, nilai Unspecified/Cancelled lama hanya placeholder yang dipertahankan saat edit record lama.
+
+Settings dua kolom desktop: foto di kiri, nama/password di kanan; mobile ditumpuk tanpa overflow viewport. Pilih file tidak otomatis menyimpan: tampilkan crop preview dengan Simpan foto/Batalkan. Avatar memakai inisial sampai sumber terkonfirmasi tersedia. Password memiliki autocomplete current/new-password, konfirmasi dan toggle tampil/sembunyi; tidak memperlihatkan isi password pada pesan sukses/error. Tombol simpan disabled selama request, error tetap menyertakan pilihan/input, sukses mengosongkan field password.

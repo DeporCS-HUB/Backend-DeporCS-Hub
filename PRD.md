@@ -56,7 +56,7 @@ Nama, status, angka, dan tindakan utama terlihat tanpa membuka paragraf. Header 
 
 ## Batas dan non-goals saat ini
 
-Belum tersedia: undangan akun, pengelolaan role lewat UI, absensi, unggahan LPJ/lampiran, pengiriman notifikasi, izin venue eksternal, atau preferensi pengguna. Permintaan menyediakan LPJ tidak berarti fitur upload sudah ada. Pencarian tiap resource sudah memakai server sebelum pagination; pencarian lintas-resource, export, avatar upload dan notifikasi belum tersedia.
+Belum tersedia: undangan akun, pengelolaan role lewat UI, absensi, unggahan LPJ/lampiran, pengiriman notifikasi, izin venue eksternal, atau preferensi pengguna. Permintaan menyediakan LPJ tidak berarti fitur upload sudah ada. Pencarian tiap resource sudah memakai server sebelum pagination; pencarian lintas-resource, export, foto profil sendiri tersedia; avatar direktori orang lain dan notifikasi belum tersedia.
 
 ## Ukuran keberhasilan
 
@@ -72,3 +72,11 @@ Uji pengguna dapat menemukan progres sebuah kegiatan, mengidentifikasi data belu
 - Timeline menggabungkan audit progres nyata dan catatan manual. Agenda mendukung create/edit/complete/reopen/delete dengan tanggal kosong tetap null. Tidak menambahkan data sejarah, lampiran atau komentar tugas palsu.
 - UI tetap navy dengan brand biru/merah; status memakai warna semantik. Desktop/375 px tidak overflow halaman; board boleh scroll horizontal dalam wadah. Deskripsi panjang tidak memperpanjang halaman.
 - Tidak menambah provider, layanan berbayar atau reset akun/data. LPJ dan informasi belum tersedia tetap menunggu sumber pengguna.
+
+
+## Iterasi status dan akun sendiri — 19 Oktober 2026
+
+- Pilihan status program Planning / On Going / Finished, konsisten pada form/filter/badge/chart. Active lama termasuk On Going. Nilai belum diketahui dan audit historis tidak ditulis ulang.
+- Pengguna aktif dapat memilih, mempratinjau, menyimpan, mengganti dan menghapus foto sendiri; JPG/PNG/WebP maksimal 5 MiB pada browser, diproses menjadi foto persegi. Header dan Settings memakai foto terkonfirmasi, dengan inisial saat kosong/gagal dimuat.
+- Pengguna dapat mengganti password sendiri dengan password saat ini, password baru dan konfirmasi. Minimal delapan karakter, tidak sama dengan sebelumnya; policy Auth tetap berlaku. Kesalahan tidak menghapus input/sesi. Sukses membersihkan input dan mempertahankan login melalui session segar.
+- Foto privat, akun lain/BPH tidak dapat mengubah atau mengambil foto caller lewat endpoint ini. Tidak ada reset password massal atau edit role/active. Tidak menambah layanan berbayar.

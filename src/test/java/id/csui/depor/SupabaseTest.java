@@ -26,6 +26,17 @@ class SupabaseTest {
  @Test void foreignKeyConflictIsSanitized(){reply("/rest/v1/programs",409,"{\"code\":\"23503\",\"details\":\"private data\"}");server.start();ApiException e=assertThrows(ApiException.class,()->db.request(HttpMethod.DELETE,"/rest/v1/programs","test-token",null));assertEquals(409,e.status);assertFalse(e.getMessage().contains("private"));}
  @Test void schemaFailureIsNotEmptySuccess(){reply("/rest/v1/inventory",404,"{\"code\":\"PGRST205\"}");server.start();assertEquals(502,assertThrows(ApiException.class,()->db.request(HttpMethod.GET,"/rest/v1/inventory","test-token",null)).status);}
 
+ @Test void uploadUsesBinaryJpegAndSignedUrlStaysOnTrustedStorageHost() {
+  var mime=new AtomicReference<String>();
+  server.createContext("/storage/v1/object/depor-avatars/own/image.jpg",e->{mime.set(e.getRequestHeaders().getFirst("Content-Type"));assertArrayEquals(new byte[]{(byte)255,(byte)216,1},e.getRequestBody().readAllBytes());byte[] out="{}".getBytes();e.getResponseHeaders().add("Content-Type","application/json");e.sendResponseHeaders(200,out.length);e.getResponseBody().write(out);e.close();});
+  reply("/storage/v1/object/sign/depor-avatars/own/image.jpg",200,"{\"signedURL\":\"/object/sign/depor-avatars/own/image.jpg?token=test-signed-token\"}");server.start();
+  db.uploadAvatar("own/image.jpg","user-token",new byte[]{(byte)255,(byte)216,1});assertEquals("image/jpeg",mime.get());
+  assertTrue(db.signedAvatar("own/image.jpg","user-token").startsWith("http://127.0.0.1:"));assertEquals("Bearer user-token",observed.get());
+ }
+ @Test void passwordPolicyErrorsAreNotSessionExpiryAndHideDetails() {
+  reply("/auth/v1/user",422,"{\"error_code\":\"weak_password\",\"msg\":\"private details\"}");server.start();
+  var e=assertThrows(ApiException.class,()->db.request(HttpMethod.PUT,"/auth/v1/user","user-token",Map.of("password","test-only-value")));assertEquals(400,e.status);assertEquals("PASSWORD_POLICY",e.code);assertFalse(e.getMessage().contains("private"));
+ }
  @Test void encodedSearchReachesHttpOnceWithUserToken() {
   var raw=new AtomicReference<String>();
   server.createContext("/rest/v1/programs",exchange->{raw.set(exchange.getRequestURI().getRawQuery());assertEquals("Bearer user-token",exchange.getRequestHeaders().getFirst("Authorization"));byte[] bytes="[]".getBytes(StandardCharsets.UTF_8);exchange.getResponseHeaders().add("Content-Type","application/json");exchange.sendResponseHeaders(200,bytes.length);exchange.getResponseBody().write(bytes);exchange.close();});server.start();
