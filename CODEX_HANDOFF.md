@@ -1,5 +1,11 @@
 # Depor CS HUB — development checkpoint
 
+## Checkpoint dokumentasi — 19 Oktober 2026
+
+Sembilan dokumen proyek tersedia pada root: [AGENTS.md](AGENTS.md), [PRD.md](PRD.md), [DESIGN.md](DESIGN.md), [ARCHITECTURE.md](ARCHITECTURE.md), [DATA.md](DATA.md), [API.md](API.md), [TASKS.md](TASKS.md), [CHANGELOG.md](CHANGELOG.md), dan [README.md](README.md). README/AGENTS disesuaikan dengan repository ini; aturan development, Free/$0 dan perlindungan kredensial tetap berlaku.
+
+Baseline kode yang didokumentasikan: frontend `cae6348`, backend `445813b`. Dokumentasi membedakan fitur yang sudah diimplementasikan dari rencana visual berdasarkan referensi baru. Tidak ada perubahan aplikasi, schema, data, akun, atau konfigurasi. Paragraf bertanggal lama di bawah merupakan riwayat; jangan memakai pernyataan lama tentang data kosong atau dashboard lama sebagai keadaan terkini.
+
 ## Program workspace — 10 October 2026
 
 The development database now contains the user-supplied program roster. Migration `20261009173515_program_workspace.sql` adds Proker/UKOR categories, multiple account-linked PJ assignments, optional progress/dates/budget, next milestones, and append-only progress history. Actual department records are stored only in development, not in this public repository. See [program workspace](docs/program-workspace.md).
