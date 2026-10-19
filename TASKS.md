@@ -1,0 +1,43 @@
+# Tasks — Depor CS HUB
+
+Daftar ini memisahkan baseline yang terbukti pada kode dari pekerjaan berikutnya. Selesai pada baseline tidak berarti integrasi hosted telah diuji ulang pada 19 Oktober 2026.
+
+## Baseline yang tersedia
+
+- [x] Login, refresh terkoordinasi, logout, serta profile aktif — FR-01.
+- [x] Empat KPI dan tiga chart ringkas; null dibedakan dari nol — FR-02.
+- [x] Proker/UKOR dengan multiple PJ, tanggal/anggaran/progres opsional — FR-03.
+- [x] Update progres khusus BPH/PJ dan audit perubahan nyata — FR-04.
+- [x] Kanban tugas dengan ownership dan status — FR-05.
+- [x] Catatan keuangan, inventaris, events dan profile — FR-06–08.
+- [x] Dialog Detail dengan tinggi terbatas dan dukungan keyboard — FR-09.
+- [x] Sembilan dokumen proyek terintegrasi pada root repository dengan kontrak yang sesuai kode.
+
+## Pekerjaan berikutnya
+
+| ID | Prioritas | Pekerjaan | Kriteria selesai |
+| --- | --- | --- | --- |
+| QA-01 | P0 | Acceptance hosted dengan akun BPH/Staff yang sekarang | Login → progres/tugas → reload → refresh → logout; verifikasi izin dan persistence; hanya fixture aman milik tes yang dibersihkan |
+| UX-01 | P1 | Review penyesuaian komposisi referensi baru — FR-10 | Mock/layout disepakati; KPI dominan; warna Depor konsisten; tanpa data/transaksi rekaan |
+| DATA-01 | P1 | Tangani batas programFocus 30 record | Coverage dan status chart Staff tetap benar saat >30 kegiatan; uji dataset besar; jangan menyamarkan record tak termuat sebagai status yang pasti kosong |
+| UX-02 | P1 | Search/filter lintas seluruh hasil | Filter server atau model pagination yang jelas; hasil tidak mengaku global ketika hanya satu halaman |
+| SEC-01 | P1 | Tinjau rekomendasi index/FK dan RLS init plan historis | Inspeksi ulang, migrasi terukur bila masih perlu, izin tidak berubah, tanpa fitur berbayar |
+| QA-02 | P1 | Cek keyboard dan ukuran layar tambahan | 375 px, tablet, desktop; chart, dialog, form dan tombol tetap dapat dipakai |
+| DATA-02 | P1 | Lengkapi informasi yang belum diberikan | LPJ/tanggal/progres hanya diisi dari sumber pengguna; tidak mengasumsikan status selesai |
+| UX-03 | P2 | Evaluasi kebijakan batas tinggi daftar | Banyak tugas/kegiatan tetap mudah ditelusuri; pilih pagination/scroll yang teruji, bukan menyembunyikan data |
+| FEAT-01 | P2 | Spesifikasi unggahan LPJ/lampiran | Batas ukuran/format, izin akses, retensi, storage Free dan UX disepakati sebelum implementasi |
+| FEAT-02 | P2 | Spesifikasi notifikasi/undangan/role UI | Kebutuhan jelas, hak akses diuji, biaya tetap terkendali; belum dianggap fitur tersedia |
+
+Prioritas P0 adalah langkah validasi, bukan klaim terjadi insiden. Pekerjaan baru tidak otomatis boleh menghapus data nyata atau mengaktifkan layanan berbayar.
+
+## Definition of done per pekerjaan
+
+1. Acceptance criteria jelas dan sesuai scope.
+2. Implementasi, izin, empty/error/loading state dan data null ditangani.
+3. Pemeriksaan yang relevan lulus; bukti mock/lokal/hosted dibedakan.
+4. Dokumen kontrak/desain/changelog ikut diperbarui.
+5. Bila release diotorisasi: commit dan target yang benar, CI lulus, status deployment terverifikasi.
+
+## Cara memperbarui daftar
+
+Pindahkan pekerjaan ke selesai hanya setelah ada bukti. Catat tanggal, commit/PR, pemeriksaan dan keterbatasannya. Status tidak diubah hanya karena tombol/komponen sudah dibuat atau mock test lulus.
