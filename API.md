@@ -33,7 +33,7 @@ Error:
 | POST | /auth/logout | Bearer dan Origin diizinkan | data.loggedOut=true; cookie dibersihkan |
 | GET | /health | Tanpa bearer | Status JVM; bukan bukti koneksi DB/Auth |
 
-Login/refresh dapat diakses tanpa bearer, tetapi Origin tetap divalidasi. Tidak ada endpoint register, invite, reset password, atau administrasi role dalam controller ini. Gunakan pengelolaan Auth yang terpisah bila diperlukan.
+Login/refresh dapat diakses tanpa bearer, tetapi Origin tetap divalidasi. Tidak ada endpoint register, invite, reset password lewat email, atau administrasi role. POST /auth/password tersedia untuk mengganti password sendiri dengan verifikasi password saat ini. Gunakan pengelolaan Auth yang terpisah bila diperlukan.
 
 ## Endpoint data
 
@@ -192,3 +192,23 @@ Tugas terkait program hanya dapat dibaca BPH/PJ. Tugas mandiri hanya BPH/creator
 Status-only update menghindari penimpaan deskripsi/assignment saat drag/drop. Jika expected_updated_at sudah berubah, hasilnya 409 dan UI meminta muat ulang. Ini bukan optimistic locking menyeluruh untuk edit lengkap/agenda. Write gagal mempertahankan status lama; tombol muat ulang adalah read/invalidation, bukan mutasi bisnis.
 
 Semua agregat dashboard sekarang mencakup row yang boleh dibaca caller: BPH seluruh departemen, Staff program yang ditangani dan tugas mandirinya. Status program, PJ dan detail tidak bocor melalui dashboard/riwayat/related tables. Directory nama akun aktif tetap tersedia untuk pilihan assignment.
+
+
+## Status program dan akun sendiri — 19 Oktober 2026
+
+Pilihan utama UI: **Planning / On Going / Finished**. Nilai API/database tetap Planning/Ongoing/Completed. Active lama ditampilkan On Going; GET /programs?status=Ongoing mencakup Ongoing dan Active sebelum pagination. Pada edit eksplisit Active disimpan sebagai Ongoing. Status lama Unspecified/Cancelled tetap terbaca agar tidak mengarang tahap kegiatan atau mengubah audit; hanya dipertahankan sebagai nilai lama, bukan pilihan utama baru. Label tanggal selesai dan status tugas/event tidak ikut diganti.
+
+| Method | Endpoint | Input / hasil |
+| --- | --- | --- |
+| GET | /profiles/me/avatar | data.available; bila ada: url signed 900 detik, expiresIn |
+| PUT | /profiles/me/avatar | image: base64 JPEG (bukan data URL), maksimal 512 KiB dan 1024 × 1024; hasil profile sendiri dengan avatar_path |
+| DELETE | /profiles/me/avatar | Hapus pointer foto sendiri dan coba hapus objek lama; avatar_path null |
+| POST | /auth/password | currentPassword (1–1024), newPassword (8–128); bearer dan Origin tepercaya wajib |
+
+Upload aplikasi menerima JPG/PNG/WebP sampai 5 MiB, memotong tengah ke persegi 512 px dan mengirim JPEG ke API. Backend memeriksa format/dimensi sebelum decode penuh, mengodekan ulang JPEG tanpa metadata, dan memakai nama file UUID di folder akun. File input/nama path/userId tidak diterima dari client. request nonimage, oversize, atau properti tambahan ditolak. Tidak ada public avatar URL untuk seluruh direktori.
+
+Foto berada di bucket private depor-avatars. API hanya menandatangani foto akun caller, tanpa service role. Signed URL adalah akses sementara 15 menit; jangan disimpan sebagai URL permanen atau dicetak ke log. Profil Auth/session menambah avatar_path nullable, bukan image bytes atau signed token. UI cache akun tetap terisolasi.
+
+Upload memakai objek versi baru. Profile pointer diubah dengan kondisi nilai lama; konflik menghasilkan 409 dan foto sebelumnya tetap menjadi sumber terkonfirmasi. File lama dihapus setelah pointer berhasil berubah. Kegagalan cleanup tidak membatalkan write profile yang sudah commit. Network outcome yang ambigu dapat meninggalkan objek privat yatim; jangan menghapus metadata storage.objects langsung untuk membersihkannya.
+
+Password diverifikasi dengan sign-in internal menggunakan email dari Auth user terverifikasi, bukan input email/UUID. ID hasil verifikasi harus sama. Kemudian update Auth memakai session segar serta current_password. Respons sukses sama seperti sesi login, ditambah passwordChanged=true: accessToken di memori dan refresh cookie HttpOnly diganti. Password tidak masuk profile, database public, cache, localStorage atau log. Verifikasi gagal menghasilkan 400 PASSWORD_MISMATCH, bukan 401 yang memicu loop refresh. Policy password Supabase tetap berlaku. Session verifikasi sementara dibersihkan bila update gagal. Fitur ini bukan reset/invite akun lain.

@@ -58,3 +58,14 @@ Pindahkan pekerjaan ke selesai hanya setelah ada bukti. Catat tanggal, commit/PR
 - [ ] Hosted migration/read-only RLS dan release pipeline diverifikasi pada commit final.
 
 QA-01 login browser hosted dengan akun nyata tetap belum ditandai selesai oleh mock/simulated JWT. Tidak mereset password untuk menyelesaikan verifikasi.
+
+
+## Iterasi status/foto/password — 19 Oktober 2026
+
+- [x] Label/pilihan status utama Planning / On Going / Finished dan filter Ongoing/Active.
+- [x] Foto profil sendiri: preview, upload versi, CAS pointer, private Storage RLS, remove dan avatar header.
+- [x] Ganti password sendiri dengan verifikasi password lama, konfirmasi dan session segar.
+- [x] Verifikasi lokal: 28 unit frontend, 36 flow browser API mock, 84 Java, enam suite SQL policy; screenshot 375/1440 px.
+- [x] Migration development 20261019100116_profile_avatars diterapkan; bucket private/JPEG/512 KiB dan empat policy authenticated diverifikasi, tanpa mengganti foto/password akun nyata.
+
+Release CI/deployment commit final dicatat pada PR iterasi ini. QA-01 hosted login/write nyata tetap terbuka; mock, metadata Storage dan simulated JWT bukan pengganti Auth/Storage end-to-end.

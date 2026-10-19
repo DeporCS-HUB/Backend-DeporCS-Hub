@@ -23,9 +23,17 @@ public class Supabase {
   baseUrl=url.replaceAll("/+$","");
   client=RestClient.builder().baseUrl(url).defaultHeader("apikey",key).requestFactory(factory).build();
  }
- public JsonNode request(HttpMethod method,String path,String token,Object body) {
+ public JsonNode uploadAvatar(String path,String token,byte[] image) {return request(HttpMethod.POST,"/storage/v1/object/depor-avatars/"+path,token,image,MediaType.IMAGE_JPEG);}
+ public String signedAvatar(String path,String token) {
+  JsonNode result=request(HttpMethod.POST,"/storage/v1/object/sign/depor-avatars/"+path,token,Map.of("expiresIn",900));
+  String signed=result.path("signedURL").asText();
+  if(!signed.startsWith("/object/sign/depor-avatars/"+path+"?token="))throw new ApiException(502,"STORAGE_UNAVAILABLE","Foto profil belum dapat dimuat.");
+  return baseUrl+"/storage/v1"+signed;
+ }
+ public JsonNode request(HttpMethod method,String path,String token,Object body) {return request(method,path,token,body,MediaType.APPLICATION_JSON);}
+ private JsonNode request(HttpMethod method,String path,String token,Object body,MediaType contentType) {
   try {
-   var req=client.method(method).uri(java.net.URI.create(baseUrl+path)).contentType(MediaType.APPLICATION_JSON).header("Prefer","return=representation");
+   var req=client.method(method).uri(java.net.URI.create(baseUrl+path)).contentType(contentType).header("Prefer","return=representation");
    if(token!=null) req.header("Authorization","Bearer "+token);
    if(body!=null) req.body(body);
    JsonNode result=req.retrieve().body(JsonNode.class);
@@ -36,6 +44,12 @@ public class Supabase {
    if(s==403 && path.startsWith("/auth/")) {
     try {JsonNode error=new com.fasterxml.jackson.databind.ObjectMapper().readTree(detail);invalidJwt=error!=null && "bad_jwt".equals(error.path("error_code").asText());}
     catch(com.fasterxml.jackson.core.JsonProcessingException ignored) { /* Preserve ordinary forbidden responses. */ }
+   }
+   if(path.equals("/auth/v1/user")&&method==HttpMethod.PUT&&(s==400||s==422)) {
+    String code="";try{code=new com.fasterxml.jackson.databind.ObjectMapper().readTree(detail).path("error_code").asText();}catch(Exception ignored){}
+    if(code.equals("reauthentication_needed")||code.equals("reauthentication_not_valid"))throw new ApiException(400,"REAUTH_REQUIRED","Silakan login ulang sebelum mengganti password.");
+    if(code.equals("current_password_mismatch")||code.equals("current_password_required"))throw new ApiException(400,"PASSWORD_MISMATCH","Password saat ini tidak sesuai.");
+    throw new ApiException(400,"PASSWORD_POLICY","Password baru belum memenuhi ketentuan akun atau sama dengan password sebelumnya.");
    }
    if(s==401 || invalidJwt || (path.startsWith("/auth/") && (s==400 || s==422))) throw new ApiException(401,"UNAUTHENTICATED","Login atau session tidak valid.");
    if(s==403) throw new ApiException(403,"FORBIDDEN","Anda tidak memiliki hak untuk operasi ini.");
@@ -50,10 +64,10 @@ public class Supabase {
   JsonNode user=request(HttpMethod.GET,"/auth/v1/user",token,null);
   UUID id;
   try { id=UUID.fromString(user.path("id").asText()); } catch(IllegalArgumentException e) { throw new ApiException(401,"UNAUTHENTICATED","Token tidak valid."); }
-  JsonNode rows=request(HttpMethod.GET,"/rest/v1/profiles?id=eq."+id+"&select=id,name,role,active",token,null);
+  JsonNode rows=request(HttpMethod.GET,"/rest/v1/profiles?id=eq."+id+"&select=id,name,role,active,avatar_path",token,null);
   if(!rows.isArray() || rows.size()!=1 || !rows.get(0).path("active").asBoolean()) throw new ApiException(403,"INACTIVE_PROFILE","Profil belum aktif. Hubungi BPH.");
   JsonNode profile=rows.get(0);String role=profile.path("role").asText();
   if(!Set.of("member","staff","admin").contains(role)) throw new ApiException(403,"FORBIDDEN","Role tidak valid.");
-  return new Principal(id,role,profile.path("name").asText(),token);
+  return new Principal(id,role,profile.path("name").asText(),token,profile.path("avatar_path").isTextual()?profile.path("avatar_path").asText():null);
  }
 }

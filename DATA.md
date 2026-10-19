@@ -11,7 +11,7 @@ Dokumen ini menjelaskan schema dan migration pada backend. Migrasi dashboard_cov
 | Tabel | Field utama | Fungsi |
 | --- | --- | --- |
 | `auth.users` | id dan kredensial yang dikelola Supabase | Identitas Auth; tidak diduplikasi ke tabel password public |
-| `profiles` | id, name, role, active, created_at | UUID sama dengan Auth; nama, role lama, aktivasi |
+| `profiles` | id, name, role, active, avatar_path, created_at | UUID sama dengan Auth; nama, role lama, aktivasi |
 | `programs` | id, name, kind, description, pic, pic_id, status, progress, progress_notes | Satu Proker atau UKOR |
 | `program_assignees` | program_id, profile_id | Banyak PJ per kegiatan; primary key gabungan |
 | `program_notes` | id, program_id, body, created_by, created_at | Pembaruan manual append-only oleh BPH/PJ |
@@ -94,6 +94,7 @@ Urutan migration pada repository backend:
 3. `20261009173515_program_workspace.sql`
 4. `20261019042816_dashboard_coverage.sql`
 5. `20261019074232_program_hub_access.sql`
+6. `20261019100116_profile_avatars.sql`
 
 Jangan mengulang migration yang sudah tercatat. `supabase/seed.sql` adalah demo lama dan dapat menggandakan data bila diulang; bukan sumber dataset departemen. Harness dan fixture SQL hanya untuk database disposable. Dokumen ini tidak membawa password, UUID roster nyata, link bukti keuangan privat, atau salinan database.
 
@@ -109,3 +110,14 @@ save_program mewajibkan 1–30 akun aktif pada assignment baru/edit lengkap, mem
 Milestone: title 1–160 nonblank, due_date nullable, status Planned/Done. Note: body 1–2000 nonblank. Keduanya memakai FK program cascade; created_by FK profile restrict dan default auth.uid. Update milestone dibatasi kolom title/due_date/status. Notes tidak dapat diedit/dihapus client. Audit progres tetap hanya trigger; catatan manual tidak dihitung sebagai pembaruan progres dalam performa Staff.
 
 Index baru meliputi task status/due_date dan program/tanggal serta creator pada agenda/catatan. task_summary menghitung seluruh hasil filter di database; daftar tetap paginated. Tidak ada pengisian persentase otomatis dari jumlah tugas.
+
+
+## Foto profil privat
+
+profiles.avatar_path nullable dibatasi ke `<profile UUID>/<object UUID>.jpg`. Update hanya diri sendiri melalui policy profile aktif yang sudah ada. Kolom role/active tetap tidak dapat ditulis client. Directory hanya mengembalikan field yang dipilih API; identity Auth/session dapat memuat pointer sendiri.
+
+Bucket depor-avatars: private, maksimal 524288 byte per objek, MIME image/jpeg. Empat policy storage.objects mencakup SELECT/INSERT/UPDATE/DELETE untuk authenticated dengan profile aktif dan nama folder UUID miliknya. BPH tidak mendapat bypass foto orang lain. Bytes diunggah/dihapus melalui Storage API dengan JWT pengguna; migration hanya membuat bucket/config/policies. storage.objects tidak dijadikan tempat menyimpan metadata file rekaan pada hosted.
+
+Tidak ada backfill foto atau perubahan password/akun saat migration. Fixture schema Storage pada tests/bootstrap.sql hanya stand-in lokal untuk policy, bukan Storage service. Signed URL berumur 900 detik dan dapat tetap berlaku sampai kedaluwarsa; bukan URL publik permanen. File versi lama dibersihkan setelah update pointer terkonfirmasi; request terputus dapat meninggalkan objek privat yatim untuk pemeriksaan operator.
+
+Status UI memakai Planning, On Going dan Finished; enum API/database lama dipertahankan. Active tetap satu kelompok dengan Ongoing. Tidak ada UPDATE massal status/audit/progres.

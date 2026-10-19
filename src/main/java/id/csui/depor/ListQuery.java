@@ -38,7 +38,8 @@ final class ListQuery {
    String expression=SEARCH.get(table).stream().map(column->column+".imatch."+literal).collect(Collectors.joining(",","(",")"));
    result.append("&or=").append(encode(expression));
   }
-  if(STATUS.containsKey(table))equal(result,input,"status",STATUS.get(table));
+  if(table.equals("programs")&&"Ongoing".equals(input.get("status")))result.append("&status=in.(Ongoing,Active)");
+  else if(STATUS.containsKey(table))equal(result,input,"status",STATUS.get(table));
   if(table.equals("programs"))equal(result,input,"kind",Set.of("Proker","UKOR"));
   if(table.equals("tasks"))equal(result,input,"priority",Set.of("Low","Medium","High"));
   if(table.equals("events"))equal(result,input,"permit_status",Set.of("Not required","Pending","Approved","Rejected"));

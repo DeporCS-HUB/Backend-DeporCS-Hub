@@ -61,3 +61,11 @@ Migration core dan events_profiles bertanggal 2026-10-08 menyiapkan schema, RLS,
 - Papan/daftar, filter program/akun/prioritas/tugas saya, beban akun BPH, count seluruh hasil filter, pagination per kolom, drag/drop/status keyboard dan refresh.
 - Status-only write dengan guard updated_at; perbaikan selected account pada opsi async dan reset cursor saat filter kembali ke nilai sebelumnya.
 - Tidak mengubah akun, assignment tersimpan, progress historis atau menambah provider/dependency berbayar.
+
+
+## 2026-10-19 — Status program dan pengaturan akun
+
+- Pilihan status utama Planning / On Going / Finished; Active lama termasuk filter On Going, tanpa backfill audit/progres.
+- Foto profil privat: crop preview, upload/ganti/hapus, avatar header, validasi/re-encode JPEG, pointer CAS dan cleanup objek versi lama.
+- Ganti password sendiri dengan verifikasi password saat ini dan sesi baru; tidak mengandalkan toggle current-password project. Error tidak menyebabkan logout/refresh loop; sukses membersihkan input.
+- Migration profile_avatars hanya menambah pointer/config bucket/RLS. Tidak mengganti akun/password/foto nyata, tidak menambah dependency/layanan berbayar.
