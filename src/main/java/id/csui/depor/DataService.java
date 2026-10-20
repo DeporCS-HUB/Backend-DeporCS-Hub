@@ -107,6 +107,32 @@ public class DataService {
   JsonNode rows=db.request(delete?HttpMethod.DELETE:id==null?HttpMethod.POST:HttpMethod.PATCH,path,p.token,delete?null:payload);
   if(!rows.isArray()||rows.size()!=1)throw new ApiException(404,"NOT_FOUND","Data tidak ditemukan atau sudah berubah.");return rows.get(0);
  }
+ public JsonNode dashboardOverview(Principal p){return db.request(HttpMethod.POST,"/rest/v1/rpc/dashboard_overview",p.token,java.util.Map.of());}
+ public JsonNode directory(Principal p) {
+  JsonNode result=db.request(HttpMethod.POST,"/rest/v1/rpc/workspace_directory",p.token,java.util.Map.of());
+  if(!result.isObject()||!result.path("profiles").isArray()||!result.path("programs").isArray())throw new ApiException(502,"DATABASE_UNAVAILABLE","Daftar akun/program tidak dapat dimuat.");
+  return result;
+ }
+ public JsonNode task(UUID id,Principal p) {
+  JsonNode rows=db.request(HttpMethod.GET,"/rest/v1/tasks?id=eq."+id+"&select=*",p.token,null);
+  if(!rows.isArray()||rows.size()!=1)throw new ApiException(404,"NOT_FOUND","Tugas tidak ditemukan atau akses tidak tersedia.");
+  return rows.get(0);
+ }
+ public JsonNode taskBoard(java.util.Map<String,String> input,Principal p) {
+  var filters=new java.util.HashMap<>(input);String pages=filters.remove("pages");
+  ListQuery.filters("tasks",filters);
+  if(filters.containsKey("page")||filters.containsKey("size"))throw new ApiException(400,"VALIDATION_ERROR","Gunakan pages untuk pagination papan.");
+  String[] parts=(pages==null?"0,0,0,0,0":pages).split(",",-1);
+  if(parts.length!=5)throw new ApiException(400,"VALIDATION_ERROR","Halaman papan tugas tidak valid.");
+  var offsets=new java.util.ArrayList<Integer>();
+  for(String part:parts) {
+   if(!part.matches("[0-9]{1,6}")||Integer.parseInt(part)>100000)throw new ApiException(400,"VALIDATION_ERROR","Halaman papan tugas tidak valid.");
+   offsets.add(Integer.parseInt(part));
+  }
+  JsonNode result=db.request(HttpMethod.POST,"/rest/v1/rpc/task_board",p.token,java.util.Map.of("p_filters",filters,"p_pages",offsets));
+  if(!result.isObject()||!result.path("summary").isObject()||!result.path("columns").isObject())throw new ApiException(502,"DATABASE_UNAVAILABLE","Papan tugas tidak dapat dimuat.");
+  return result;
+ }
  public JsonNode taskSummary(java.util.Map<String,String> filters,Principal p) {
   ListQuery.filters("tasks",filters);
   return db.request(HttpMethod.POST,"/rest/v1/rpc/task_summary",p.token,java.util.Map.of("p_filters",filters));

@@ -78,3 +78,13 @@ Release CI/deployment commit final dicatat pada PR iterasi ini. QA-01 hosted log
 - [x] Batch signing, fallback inisial dan invalidasi nama/path direktori setelah refresh.
 - [x] Migration development 20261020025834_team_avatar_read; bucket tetap private dan tiga policy mutasi owner-only diverifikasi.
 - [ ] Catat CI serta deployment final pada PR release.
+
+
+## Faster loading — 20 Oktober 2026
+
+- [x] Baseline data-ready, jumlah request, initial bundle dan Lighthouse.
+- [x] Batch board/summary, direktori ringkas, dashboard chart-only dan detail tugas on demand.
+- [x] Early session/route preload, lazy Layout/program Tasks tab dan gzip JSON tanpa public caching.
+- [x] Gate performa mobile pada production build; uji role/pagination/description dan kompresi.
+- [x] Migration development 20261020032751_performance_reads, tanpa perubahan data/akun.
+- [ ] Catat hasil CI dan deployment final pada PR release.

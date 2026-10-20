@@ -18,6 +18,10 @@ public class DataController {
  @PostMapping("/programs/{id}/milestones") ResponseEntity<?> milestone(@PathVariable UUID id,@Valid @RequestBody Inputs.Milestone x,@AuthenticationPrincipal Principal p){return ResponseEntity.status(201).body(Map.of("data",data.workspaceWrite("program_milestones",id,null,x,p,false)));}
  @PutMapping("/programs/{id}/milestones/{milestoneId}") Map<String,Object> milestoneUpdate(@PathVariable UUID id,@PathVariable UUID milestoneId,@Valid @RequestBody Inputs.Milestone x,@AuthenticationPrincipal Principal p){return Map.of("data",data.workspaceWrite("program_milestones",id,milestoneId,x,p,false));}
  @DeleteMapping("/programs/{id}/milestones/{milestoneId}") Map<String,Object> milestoneDelete(@PathVariable UUID id,@PathVariable UUID milestoneId,@AuthenticationPrincipal Principal p){data.workspaceWrite("program_milestones",id,milestoneId,java.util.Map.of(),p,true);return Map.of("data",Map.of("deleted",true));}
+ @GetMapping("/dashboard/overview") Map<String,Object> dashboardOverview(@AuthenticationPrincipal Principal p){return Map.of("data",data.dashboardOverview(p));}
+ @GetMapping("/directory") Map<String,Object> directory(@AuthenticationPrincipal Principal p){return Map.of("data",data.directory(p));}
+ @GetMapping("/tasks/{id}") Map<String,Object> task(@PathVariable UUID id,@AuthenticationPrincipal Principal p){return Map.of("data",data.task(id,p));}
+ @GetMapping("/tasks/board") Map<String,Object> taskBoard(@RequestParam Map<String,String> filters,@AuthenticationPrincipal Principal p){return Map.of("data",data.taskBoard(filters,p));}
  @GetMapping("/tasks/summary") Map<String,Object> taskSummary(@RequestParam Map<String,String> filters,@AuthenticationPrincipal Principal p){return Map.of("data",data.taskSummary(filters,p));}
  @PutMapping("/tasks/{id}/status") Map<String,Object> taskStatus(@PathVariable UUID id,@Valid @RequestBody Inputs.TaskStatus x,@AuthenticationPrincipal Principal p){return Map.of("data",data.taskStatus(id,x,p));}
  private ResponseEntity<?> write(String table,UUID id,Object body,Principal p){return ResponseEntity.status(id==null?201:200).body(Map.of("data",data.write(table,id,body,p)));}

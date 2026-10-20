@@ -87,3 +87,8 @@ Uji pengguna dapat menemukan progres sebuah kegiatan, mengidentifikasi data belu
 - Tim Departemen, daftar/detail PJ program serta papan/daftar/detail tugas menampilkan foto akun bersama nama; nama tidak diganti oleh foto saja. Sumber assignment UUID, bukan teks PIC lama.
 - Pengguna aktif (BPH/Staff) dapat melihat foto aktif anggota departemen. Foto tidak membuka akses program/tugas yang sebelumnya tidak diizinkan. Pengunjung tanpa login dan akun nonaktif tidak dapat meminta foto.
 - Hanya pemilik dapat mengunggah, mengganti dan menghapus. Foto kosong/gagal dimuat kembali ke inisial tanpa menghalangi data/tindakan. Foto lama yang bukan pointer terkini tidak dibagikan.
+
+
+## Faster-load acceptance — 20 Oktober 2026
+
+Data dashboard/program/board harus siap dalam median ≤2.5 s pada fixture mobile yang didokumentasikan; Lighthouse mobile median ≥90 dengan LCP/TBT/CLS hijau. Gate request dan ukuran bundle mencegah kembali ke delapan request board terpisah. Filter/pagination/drag/drop, angka KPI global, data null, foto, akses BPH/PJ dan penyimpanan description setelah edit harus tetap benar. Skor visual tinggi saja tidak dianggap bukti data operasional sudah cepat.

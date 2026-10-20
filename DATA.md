@@ -96,6 +96,7 @@ Urutan migration pada repository backend:
 5. `20261019074232_program_hub_access.sql`
 6. `20261019100116_profile_avatars.sql`
 7. `20261020025834_team_avatar_read.sql`
+8. `20261020032751_performance_reads.sql`
 
 Jangan mengulang migration yang sudah tercatat. `supabase/seed.sql` adalah demo lama dan dapat menggandakan data bila diulang; bukan sumber dataset departemen. Harness dan fixture SQL hanya untuk database disposable. Dokumen ini tidak membawa password, UUID roster nyata, link bukti keuangan privat, atau salinan database.
 
@@ -125,3 +126,8 @@ Status UI memakai Planning, On Going dan Finished; enum API/database lama dipert
 
 
 Migrasi `team_avatar_read` menambah hanya policy SELECT `depor_avatar_department_read`. Predicate `(select private.app_role()) is not null` memverifikasi pembaca; subquery profile aktif membatasi nama objek pada pointer terkini. Bucket tetap private. Tidak ada backfill akun, assignment, path foto atau password; fixture metadata Storage hanya lokal disposable.
+
+
+### RPC pembacaan ringkas
+
+Migration performance_reads hanya membuat workspace_directory(), task_board(jsonb, integer[]) dan dashboard_overview(), semuanya STABLE SECURITY INVOKER, search_path kosong, EXECUTE hanya authenticated. Tidak mengubah tabel, akun, assignment, policy, password atau business rows. Board mempunyai lima slice maksimum 12 row, pagination global terfilter dan summary parity dengan task_summary. Dashboard compact menjaga total, null progress, distribusi status, serta kontribusi Staff; fungsi dashboard_stats lama dipertahankan untuk Keuangan.

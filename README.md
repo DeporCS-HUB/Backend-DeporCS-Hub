@@ -115,3 +115,8 @@ Buka **Program → Buka program** untuk Ringkasan, Tugas, Timeline dan Agenda. A
 ### Foto tim dan PJ
 
 Foto profil yang disimpan kini terlihat bagi akun departemen aktif di Tim, PJ program, dan assignment papan/daftar/detail tugas. Foto tetap dalam bucket privat dengan signed URL sementara; edit/hapus hanya pemilik. Nama dan inisial tetap tersedia bila foto kosong/gagal. Akses program/tugas mengikuti aturan BPH/PJ yang sudah ada.
+
+
+### Performance gate
+
+Frontend: `npm run build && npm run test:performance` (setelah Chromium Playwright tersedia). Mengukur build production dengan API fixture, bukan akun nyata. Laporan JSON tersedia pada test-results/performance.json; batas dan hasil sebelum/sesudah ada di frontend docs/loading-performance.md. Lighthouse/chrome-launcher adalah dev-only dan tidak masuk bundle aplikasi. Backend tetap `mvn verify`; test kompresi menjalankan HTTP server lokal nyata, SQL hanya database disposable.
