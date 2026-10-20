@@ -205,7 +205,7 @@ Pilihan utama UI: **Planning / On Going / Finished**. Nilai API/database tetap P
 | DELETE | /profiles/me/avatar | Hapus pointer foto sendiri dan coba hapus objek lama; avatar_path null |
 | POST | /auth/password | currentPassword (1–1024), newPassword (8–128); bearer dan Origin tepercaya wajib |
 
-Upload aplikasi menerima JPG/PNG/WebP sampai 5 MiB, memotong tengah ke persegi 512 px dan mengirim JPEG ke API. Backend memeriksa format/dimensi sebelum decode penuh, mengodekan ulang JPEG tanpa metadata, dan memakai nama file UUID di folder akun. File input/nama path/userId tidak diterima dari client. request nonimage, oversize, atau properti tambahan ditolak. Tidak ada URL publik permanen; direktori memakai batch signed URL terautentikasi.
+Upload aplikasi menerima JPG/PNG/WebP sampai 5 MiB, memotong tengah ke persegi 256 px dan mengirim JPEG ke API. Backend memeriksa format/dimensi sebelum decode penuh, mengodekan ulang JPEG tanpa metadata, dan memakai nama file UUID di folder akun. File input/nama path/userId tidak diterima dari client. request nonimage, oversize, atau properti tambahan ditolak. Tidak ada URL publik permanen; direktori memakai batch signed URL terautentikasi.
 
 Foto berada di bucket private depor-avatars. Endpoint /me menandatangani foto sendiri; endpoint batch direktori menandatangani foto terkini anggota aktif menggunakan JWT pembaca, tanpa service role. Signed URL adalah akses sementara 15 menit; jangan disimpan sebagai URL permanen atau dicetak ke log. Profil Auth/session menambah avatar_path nullable, bukan image bytes atau signed token. UI cache akun tetap terisolasi.
 
@@ -252,3 +252,10 @@ Endpoint `/dashboard` tetap menyediakan kontrak finansial lama untuk Keuangan; `
 POST /tasks dan PUT /tasks/{id} mewajibkan program_id berupa UUID selain title/status/priority; omission/null ditolak 400. Full edit record legacy sekaligus menautkan induknya. PUT /tasks/{id}/status tetap parsial sehingga status legacy tidak terblokir. Caller JWT/RLS dan aturan Staff self-assignment tidak berubah.
 
 GET /tasks, /tasks/summary dan /tasks/board menerima program_scope kosong, linked atau unlinked, terpisah dari scope=unassigned (assignee kosong). Kedua summary menambahkan unlinked, hitungan record tanpa induk setelah semua filter; workload tetap hanya BPH. List/board memakai filter yang sama sebelum pagination. GET /directory menambahkan kind pada setiap program, tanpa request tambahan. RPC baru/yang diperbarui tetap SECURITY INVOKER dengan EXECUTE hanya authenticated.
+
+
+## Lighthouse: thumbnail dan origin API — 20 Oktober 2026
+
+GET /profiles/me/avatar menerima size opsional 96 atau 192. Tanpa size, kontrak signed URL 900 detik tetap tersedia. Dengan size, backend mengunduh hanya pointer milik caller yang baru diverifikasi menggunakan JWT/RLS, membatasi JPEG 512 KiB/dimensi 1024 sebelum decode, crop tengah lalu menghasilkan JPEG kecil dalam url berbentuk data:image/jpeg;base64. Tidak mengirim expiresIn untuk inline data. Ukuran lain 400; kosong available=false; path/userId/URL download tidak diterima dari client. Respons tetap no-store dan cache frontend tetap per akun; tidak menyimpan thumbnail atau mengubah foto asli di Storage. Foto baru dari browser diproses menjadi 256 px; batas upload API tetap kompatibel.
+
+Deployment Vercel frontend kini membangun VITE_API_URL=/api dan meneruskan /api/:path* ke backend yang sudah digunakan. API/auth tidak boleh masuk cache CDN. Origin/Authorization/Cookie/Set-Cookie tetap diteruskan; backend tetap memeriksa Origin allowlist serta Auth/profile/RLS. Cookie HttpOnly tanpa Domain menjadi milik host frontend saat lewat proxy. Sesi lama pada domain backend tidak dapat dipindahkan otomatis; pengguna mungkin perlu login ulang sekali. Tidak memakai cookie non-HttpOnly atau localStorage token.

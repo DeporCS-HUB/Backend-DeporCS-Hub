@@ -108,3 +108,8 @@ Route-code preload berjalan sejajar pemeriksaan sesi; tidak menampilkan data aku
 Papan utama menyebut rekap tugas pelaksanaan Proker/UKOR. Kartu dan baris daftar menyediakan tautan nama program dengan jenis Proker/UKOR; program terpilih pada filter otomatis mengisi seluruh tombol create termasuk tombol tiap kolom. Editor tugas mewajibkan program, dan editor embedded menampilkan konteks program tanpa dropdown pemindahan. Nama akun/foto, status keyboard, pagination dan dialog deskripsi tetap digunakan.
 
 Tugas lama tanpa induk memakai label Perlu ditautkan dan aksi Tautkan program. Pemberitahuan ringkas menunjukkan hitungan sesuai filter dan membuka filter khusus, bukan menghapus atau menebak program. Memilih induk mempertahankan assignee bila masih BPH/PJ yang memenuhi syarat; bila tidak, pilihan assignee dikosongkan untuk ditinjau ulang.
+
+
+## Perbaikan Lighthouse — 20 Oktober 2026
+
+Panel chart memakai heading h2 di bawah judul halaman h1; ukuran dan identitas biru–merah dipertahankan. Avatar header mempunyai dimensi layout eksplisit dan sumber thumbnail 96 px, Settings 192 px; foto gagal tetap inisial. Upload baru dipotong 256 px, foto asli yang sudah tersimpan tidak ditulis ulang. Tidak memperpanjang paragraf dashboard atau mengubah KPI agar audit terlihat lebih cepat.

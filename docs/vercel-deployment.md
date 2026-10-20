@@ -29,11 +29,9 @@ Reuse the project's real assigned HTTPS URLs; do not guess a subdomain from a pr
 
 ## Frontend
 
-Import `DeporCS-HUB/Frontend-DeporCS-Hub` from main as Vite. The committed vercel.json installs using npm ci, builds dist, and rewrites SPA navigation to index.html. It requires a non-empty VITE_API_URL at build time so an unconfigured deployment fails instead of routing login into the static HTML.
+Import `DeporCS-HUB/Frontend-DeporCS-Hub` as Vite. The committed build command explicitly uses VITE_API_URL=/api, overriding the old absolute public value if present. The API rewrite /api/:path* forwards to the verified existing https://depor-cs-hub-api.vercel.app/api/:path* before the SPA fallback. No frontend secret/key or additional Function is needed. If the real backend target changes, update this explicit destination in the repository; do not guess it.
 
-Set VITE_API_URL to the actual backend HTTPS production origin followed by /api. This value is public build configuration. The frontend requires no Supabase key. Separate backend requests go directly to that URL; the SPA rewrite does not proxy APIs. Redeploy the frontend after updating its build-time URL.
-
-If browser policy blocks cross-site refresh cookies, verify a same-origin API proxy or same-site routing before claiming browser/session acceptance. Do not insert guessed proxy destinations or weaken Auth Origin checks to work around a routing error.
+API responses use private/no-store and CDN no-store; only hashed /assets resources are immutable. Keep APP_ALLOWED_ORIGINS set to the exact frontend HTTPS origin, APP_COOKIE_SECURE=true, and host-only HttpOnly cookies scoped to /api/auth. The existing SameSite=None remains compatible with the first-party proxy; Lax is suitable when all clients use same-site routing. Do not change cookies or weaken Origin checks based on an untrusted forwarded host. A refresh cookie set previously on the backend host cannot be copied to the frontend host: users may need one new login after this release.
 
 ## Deploy and verify
 

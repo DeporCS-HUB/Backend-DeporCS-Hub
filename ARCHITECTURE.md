@@ -103,3 +103,10 @@ Frontend memiliki gate CI `npm run test:performance` atas build production, fixt
 ## Program sebagai induk tugas — 20 Oktober 2026
 
 Tidak ada tabel aktivitas baru: tasks.program_id menjadi induk wajib untuk pekerjaan kecil Proker/UKOR. Frontend memakai endpoint tasks yang sama, auto-parent dalam workspace dan require parent di papan agregat. DTO API menolak create/full update tanpa induk; trigger database juga menolak insert null dan detachment melalui Data API langsung. Legacy null dipertahankan untuk klasifikasi manual dengan aturan akses lama. Directory dan board snapshot tetap berbagi cache per akun; penambahan kind/unlinked tidak menambah request awal.
+
+
+## Tindak lanjut Lighthouse — 20 Oktober 2026
+
+Vercel frontend bertindak sebagai reverse proxy statis /api ke backend yang sudah ada, sebelum fallback SPA; browser memakai /api relatif. Build command menyetel path relatif meskipun environment VITE_API_URL lama masih absolut. Tidak menambah Function, provider, Auth bypass atau caching principal. Respons API private/no-store pada browser/CDN; hanya aset bernama hash boleh cache immutable. robots.txt menjadi file text/plain nyata.
+
+Header meminta thumbnail 96 px dan Settings 192 px melalui endpoint sendiri, dengan data JPEG kecil inline di JSON private. Backend mengambil objek private via caller JWT/RLS dan resize Java ImageIO, bukan Storage image transformation berbayar. Nama/path file baru, pointer foto asli dan policy tidak berubah. Direktori tim tetap batch signed URL; tidak menambah N+1 download pada render daftar. AccountIdentity fallback, cache scope dan izin program/tugas dipertahankan.

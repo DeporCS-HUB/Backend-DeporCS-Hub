@@ -84,4 +84,31 @@ class AccountApiTest {
   mvc.perform(delete("/api/profiles/me/avatar").header("Authorization","Bearer user-token")).andExpect(status().isOk()).andExpect(jsonPath("$.data.avatar_path").doesNotExist());
   verify(db).request(HttpMethod.DELETE,"/storage/v1/object/depor-avatars","user-token",Map.of("prefixes",List.of(old)));
  }
+ @Test void ownThumbnailIsSmallPrivateAndUsesOnlyCurrentPointer()throws Exception{
+  when(db.downloadAvatar(old,"user-token")).thenReturn(Base64.getDecoder().decode(jpeg(512,512)));
+  var result=mvc.perform(get("/api/profiles/me/avatar").param("size","96").param("version","untrusted-cache-key").header("Authorization","Bearer user-token"))
+   .andExpect(status().isOk()).andExpect(header().string("Cache-Control",org.hamcrest.Matchers.containsString("no-store"))).andReturn();
+  String url=mapper.readTree(result.getResponse().getContentAsString()).path("data").path("url").asText();
+  assertTrue(url.startsWith("data:image/jpeg;base64,"));
+  var image=ImageIO.read(new java.io.ByteArrayInputStream(Base64.getDecoder().decode(url.substring(url.indexOf(',')+1))));
+  assertEquals(96,image.getWidth());assertEquals(96,image.getHeight());assertTrue(url.length()<5000);
+  verify(db).downloadAvatar(old,"user-token");verify(db,never()).signedAvatar(any(),any());
+ }
+ @Test void thumbnailRejectsSizeWithoutDownloadingAndNeverReadsForeignPointer()throws Exception{
+  mvc.perform(get("/api/profiles/me/avatar").param("size","4096").header("Authorization","Bearer user-token")).andExpect(status().isBadRequest());
+  when(db.authenticate("user-token")).thenReturn(new Principal(uid,"staff","BPH","user-token","00000000-0000-0000-0000-000000000099/00000000-0000-0000-0000-000000000002.jpg"));
+  mvc.perform(get("/api/profiles/me/avatar").param("size","96").header("Authorization","Bearer user-token")).andExpect(status().isNotFound());
+  verify(db,never()).downloadAvatar(any(),any());
+ }
+ @Test void thumbnailFailureDoesNotMutatePhotoOrProfile()throws Exception{
+  when(db.downloadAvatar(old,"user-token")).thenThrow(new ApiException(503,"STORAGE_UNAVAILABLE","Foto belum dapat dimuat."));
+  mvc.perform(get("/api/profiles/me/avatar").param("size","96").header("Authorization","Bearer user-token")).andExpect(status().isServiceUnavailable());
+  verify(db,never()).request(any(),any(),any(),any());verify(db,never()).uploadAvatar(any(),any(),any());
+ }
+ @Test void thumbnailsBoundDecodeDimensionsAndDoNotUpscale()throws Exception{
+  assertThrows(ApiException.class,()->AvatarController.thumbnail(Base64.getDecoder().decode(jpeg(1025,1)),96));
+  assertThrows(ApiException.class,()->AvatarController.thumbnail(new byte[]{1,2,3},96));
+  String url=AvatarController.thumbnail(Base64.getDecoder().decode(jpeg(20,10)),96);
+  var image=ImageIO.read(new java.io.ByteArrayInputStream(Base64.getDecoder().decode(url.substring(url.indexOf(',')+1))));assertEquals(10,image.getWidth());assertEquals(10,image.getHeight());
+ }
 }

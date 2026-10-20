@@ -24,6 +24,21 @@ public class Supabase {
   client=RestClient.builder().baseUrl(url).defaultHeader("apikey",key).requestFactory(factory).build();
  }
  public JsonNode uploadAvatar(String path,String token,byte[] image) {return request(HttpMethod.POST,"/storage/v1/object/depor-avatars/"+path,token,image,MediaType.IMAGE_JPEG);}
+ // Caller JWT/RLS download from a server-selected current pointer; never follow an input URL.
+ public byte[] downloadAvatar(String path,String token) {
+  try {
+   return client.get().uri(java.net.URI.create(baseUrl+"/storage/v1/object/authenticated/depor-avatars/"+path))
+    .header("Authorization","Bearer "+token).exchange((request,response)->{
+     int status=response.getStatusCode().value();
+     if(status==401||status==403)throw new ApiException(status,"FORBIDDEN","Foto profil tidak tersedia.");
+     if(status!=200||!MediaType.IMAGE_JPEG.isCompatibleWith(response.getHeaders().getContentType()==null?MediaType.APPLICATION_OCTET_STREAM:response.getHeaders().getContentType()))throw new ApiException(502,"STORAGE_UNAVAILABLE","Foto profil belum dapat dimuat.");
+     if(response.getHeaders().getContentLength()>524288)throw new ApiException(502,"STORAGE_UNAVAILABLE","Foto profil belum dapat dimuat.");
+     byte[] bytes=response.getBody().readNBytes(524289);
+     if(bytes.length>524288)throw new ApiException(502,"STORAGE_UNAVAILABLE","Foto profil belum dapat dimuat.");
+     return bytes;
+    });
+  }catch(ResourceAccessException e){throw new ApiException(503,"STORAGE_UNAVAILABLE","Foto profil belum dapat dimuat.");}
+ }
  public String signedAvatar(String path,String token) {
   JsonNode result=request(HttpMethod.POST,"/storage/v1/object/sign/depor-avatars/"+path,token,Map.of("expiresIn",900));
   String signed=result.path("signedURL").asText();

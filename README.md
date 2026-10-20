@@ -44,7 +44,7 @@ npm ci
 npm run dev
 ```
 
-Frontend lokal berjalan pada `http://localhost:3000`. Vite meneruskan `/api` ke `http://localhost:8080`. `API_PROXY_TARGET` dapat mengganti target lokal. `VITE_API_URL` opsional saat lokal; untuk deployment terpisah, nilainya adalah URL API HTTPS berakhiran `/api`.
+Frontend lokal berjalan pada `http://localhost:3000`. Vite meneruskan `/api` ke `http://localhost:8080`. `API_PROXY_TARGET` dapat mengganti target lokal. `VITE_API_URL` opsional saat lokal; untuk Vercel memakai `/api` melalui rewrite yang sudah dikonfigurasi. Hosting lain yang mengakses API langsung dapat memakai URL HTTPS berakhiran `/api`.
 
 Tidak diperlukan Supabase key, database credential, atau secret di frontend. Semua `VITE_*` terlihat di browser.
 
@@ -125,3 +125,10 @@ Frontend: `npm run build && npm run test:performance` (setelah Chromium Playwrig
 ### Tugas pelaksanaan Proker/UKOR
 
 Buka Program → Buka program → Tugas untuk menambah pekerjaan kecil di program tersebut. Papan tugas utama menjadi rekap lintas program yang terlihat oleh akun; create dari papan wajib memilih Proker/UKOR. Klik nama program pada kartu untuk kembali ke ruang kerjanya. Tugas lama berlabel Perlu ditautkan dapat dipilihkan induk lewat Tautkan program; tidak ada penghapusan atau pemetaan otomatis.
+
+
+### API satu origin dan kualitas halaman
+
+Deployment Vercel menggunakan /api relatif lewat rewrite ke backend yang sudah ada; build command mengesampingkan VITE_API_URL absolut lama. Tidak perlu key/env baru. Login ulang sekali mungkin diperlukan karena cookie lama tersimpan di host backend. Backend tetap memerlukan origin frontend yang persis, cookie secure, serta aturan Auth/RLS yang sama. Pengembangan lokal tetap memakai proxy Vite /api.
+
+Header memakai thumbnail private, panel dashboard heading h2, dan robots.txt valid. Performance gate kini juga memeriksa urutan heading, Accessibility 100 dan SEO 100 pada fixture. Laporan Lighthouse pengguna bukan hasil benchmark yang sama dengan CI; lihat frontend docs/lighthouse-feedback.md untuk sumber temuan dan batas verifikasi.
