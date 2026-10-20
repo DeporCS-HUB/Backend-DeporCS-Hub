@@ -96,3 +96,8 @@ Settings dua kolom desktop: foto di kiri, nama/password di kanan; mobile ditumpu
 ### Foto identitas anggota — 20 Oktober 2026
 
 Foto bundar 29 px pada assignment dan 38 px di Tim; object-fit cover, lazy loading, tidak draggable agar tidak mengganggu drag kartu. Nama tetap terbaca di sampingnya; multi-PJ ditumpuk ringkas dan nama panjang dibungkus di daftar program. Alt menyebut nama akun; foto rusak/kosong menampilkan inisial tanpa layout shift. Tidak ada kontrol edit foto orang lain.
+
+
+### Perceived loading
+
+Route-code preload berjalan sejajar pemeriksaan sesi; tidak menampilkan data akun sebelum verifikasi. Board merender kartu ringkas; Detail/Edit menunggu record penuh, menampilkan error di halaman bila gagal, dan tidak membuka form kosong. Tombol/status tidak menganggap request gagal sebagai sukses. Struktur visual, warna, identitas foto dan keyboard status tetap dipertahankan.

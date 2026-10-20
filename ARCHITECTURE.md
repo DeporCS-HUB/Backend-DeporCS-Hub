@@ -68,7 +68,7 @@ Belum ada push Realtime, job notifikasi, file upload, optimistic locking untuk e
 
 Route /programs/:id dimuat terpisah dan menyediakan Ringkasan/Tugas/Timeline/Agenda. Deskripsi/catatan panjang tetap clamp tiga baris dan dialog scroll. Program tunggal dibaca dari API; hidden buttons bukan batas izin. BPH mengatur profil program/PJ; BPH/PJ dapat menambah catatan, mengelola agenda dan memperbarui progres. Scope tugas mengikuti izin program dan aturan owner.
 
-Board menggunakan lima collection paginated independen (12 kartu per kolom) dan satu summary terfilter global, dimulai paralel. Tampilan daftar 20 per halaman. Metadata akun/program dibaca paralel, memakai deduplikasi cache yang sama. Total tidak diturunkan dari page kartu. Perubahan filter mereset cursor, termasuk kembali ke filter lama. Pencarian debounce 250 ms. Route chart tidak mendapat dependency baru.
+Sejak 20 Oktober, board memakai satu snapshot RPC untuk lima kolom paginated independen (12 kartu per kolom) dan summary global; scan task terfilter di-materialize sekali. Tampilan daftar 20 per halaman. Metadata akun/program dibaca paralel, memakai deduplikasi cache yang sama. Total tidak diturunkan dari page kartu. Perubahan filter mereset cursor, termasuk kembali ke filter lama. Pencarian debounce 250 ms. Route chart tidak mendapat dependency baru.
 
 Drag/drop dan select keyboard memakai endpoint status-only dengan updated_at guard opsional; respons 409 tidak dianggap sukses. Cache tetap per akun dan invalidasi setelah commit. Muat ulang hanya menghapus cache dan meminta read terbaru; belum ada push/auto-polling. Pencabutan PJ berlaku pada request API/database berikutnya; data yang telah dibaca tidak dapat ditarik kembali dari layar tanpa refresh.
 
@@ -89,3 +89,12 @@ Pengujian HTTP adapter dan browser menggunakan upstream/API mock; SQL memakai st
 ## Foto tim dan assignment — 20 Oktober 2026
 
 Direktori mengembalikan avatar_path. AvatarDirectory menandatangani maksimal 100 ID per batch GET terdeduplikasi; API membaca pointer server lalu satu request batch ke Storage menggunakan JWT caller. Nama/foto AccountIdentity mengikuti UUID yang sama di Tim, PJ program, tugas, dan ringkasan beban. Directory dibaca semua halaman dan mengikuti scope akun/revision cache, sehingga refresh mengambil nama/path terbaru. Tidak ada N+1 request per kartu. Signed URL diperbarui setiap 12 menit saat halaman terbuka serta saat tab kembali terlihat; foto gagal kembali ke inisial. Cache hanya memori per akun; tidak ada dependency aplikasi atau layanan berbayar baru.
+
+
+## Performance budgets — 20 Oktober 2026
+
+Pemulihan sesi dimulai sebelum render React, bersamaan dengan preload kode route yang sedang diminta. Preload hanya aset statis, bukan data terlindungi; Auth dan active profile tetap diverifikasi sebelum halaman/data. Sidebar memuat kode pada hover/focus dan menghormati saveData/2g. Layout dimuat terpisah; tab Tugas dalam program tidak masuk bundle Ringkasan awal.
+
+`workspace_directory` menggabungkan opsi akun/program ringkas. `task_board` mengembalikan summary + lima slice dari satu filtered CTE materialized, sementara deskripsi dimuat saat Detail/Edit. `dashboard_overview` menghitung chart dari data RLS yang sama tanpa financial/inventory reads. Backend memverifikasi Auth/profile setiap request dan meneruskan JWT, tidak menambah TTL principal/token atau memakai service role.
+
+Frontend memiliki gate CI `npm run test:performance` atas build production, fixture 17 akun/14 program/100 tugas, API delay 400 ms, RTT 150 ms/1.6 Mbps/CPU 4×, median 3 run. Budget: initial JS ≤86 KiB gzip; data siap ≤2.5 s; request awal dashboard ≤2 dan program/board ≤3 termasuk refresh, tanpa foto; kembali ke board hangat ≤250 ms. Lighthouse mobile median ≥90, LCP ≤2.5 s, TBT ≤200 ms, CLS ≤0.1 untuk login/dashboard/board. Hasil fixture ini tidak membuktikan latensi Auth/API akun hosted atau cold start Vercel.

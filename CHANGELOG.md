@@ -76,3 +76,10 @@ Migration core dan events_profiles bertanggal 2026-10-08 menyiapkan schema, RLS,
 - Foto akun ditampilkan bersama nama pada Tim Departemen, PJ program serta assignment papan/daftar/detail tugas dan ringkasan beban. Identitas berasal dari UUID akun.
 - API batch signed URLs dan policy baca foto terkini anggota aktif; bucket tetap private dan mutasi foto tetap owner-only.
 - Pembacaan direktori mengikuti invalidasi cache akun; fallback inisial dan refresh URL menghindari foto kosong menghalangi pekerjaan. Tidak menambah dependency aplikasi, reset akun atau layanan berbayar.
+
+
+## 20 Oktober 2026 — Faster load
+
+- Board turun dari delapan request data awal menjadi dua (di luar foto/session), dengan satu snapshot RLS untuk seluruh kolom dan summary. Directory mengecualikan deskripsi/history; deskripsi tugas diambil sebelum Detail/Edit.
+- Dashboard chart memakai payload terpisah dari finansial/inventaris; endpoint lama Keuangan tetap tersedia. Session/code route mulai paralel, Layout dan program Tasks tab dipisahkan. Gzip JSON mempertahankan no-store.
+- Performance gate CI mencakup mobile data-ready, request/bundle budget, dan Lighthouse. Tes role serta summary parity memastikan batching tidak memperluas akses. Tidak menambah layanan berbayar atau mengubah business rows.

@@ -231,3 +231,17 @@ Password diverifikasi dengan sign-in internal menggunakan email dari Auth user t
 ```
 
 UUID invalid, list kosong/tidak diberikan atau >100 menghasilkan 400; tanpa autentikasi 401; akun nonaktif 403. Upstream gagal menghasilkan error (bukan sukses palsu). Foto per-file gagal diabaikan; UI memakai inisial. Signed URLs jangan dicetak ke log/disimpan permanen. Hanya foto terpilih yang dibagikan; URL yang sudah diterbitkan dapat berlaku hingga expiry. PUT/DELETE foto tetap di `/profiles/me/avatar`; tidak ada endpoint mutasi foto orang lain.
+
+
+## Compact reads — 20 Oktober 2026
+
+| GET endpoint | Response data | Izin |
+| --- | --- | --- |
+| `/dashboard/overview` | overview, enam field summary KPI, programFocus ≤30, programStatusCounts, staffPerformance chart | JWT + profile aktif; invoker/RLS |
+| `/directory` | profiles aktif (id/name/role/active/avatar_path), programs (id/name/assignee_ids) | Scope program BPH/PJ; tanpa description, budget, email Auth |
+| `/tasks/board` | summary global sesuai filter, columns untuk lima status berisi items ≤12 dan hasMore | Izin task yang sama; workload hanya BPH |
+| `/tasks/:id` | Satu record tugas penuh, termasuk description, atau 404 | RLS, tidak menambah izin edit |
+
+Board menerima q, program_id, assignee_id, priority, status, scope seperti daftar lama; `pages=0,0,0,0,0` mengikuti Backlog/To Do/In Progress/Review/Done. Tepat lima integer 0–100000; parameter page/size ditolak 400. Setiap kolom memiliki page sendiri; mengganti filter mereset semua page. Summary menghitung seluruh hasil filter, bukan slice kartu. Description tidak dikirim pada board; Detail/Edit mengambil record lengkap dan Edit memaksa read baru agar tidak menimpa deskripsi kosong. Error read tidak membuka editor kosong.
+
+Endpoint `/dashboard` tetap menyediakan kontrak finansial lama untuk Keuangan; `/dashboard/overview` tidak menghitung/mengirim finance, inventory, agenda atau teks panjang. Directory/board/overview masing-masing satu RPC dengan JWT caller, tanpa cache principal/data server, tanpa bypass RLS. Respons JSON ≥1024 byte dapat memakai gzip bila client mendukung; Cache-Control tetap no-store. Tidak ada auth/data dalam CDN publik.
