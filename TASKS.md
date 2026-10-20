@@ -99,3 +99,12 @@ Release CI/deployment commit final dicatat pada PR iterasi ini. QA-01 hosted log
 - [ ] Pilih program untuk record legacy melalui aplikasi oleh pengguna yang berhak; tidak ada tebakan/backfill otomatis.
 
 Bukti validasi dan rilis dicatat pada PR perubahan ini; jumlah tes historis tidak menggantikan hasil CI terbaru.
+
+
+## Tindak lanjut Lighthouse — 20 Oktober 2026
+
+- [x] Perbaiki heading panel menjadi h2 dan robots.txt nyata.
+- [x] Proxy /api satu origin, private/no-store dan browser login/reload/logout dengan cookie HttpOnly fixture.
+- [x] Thumbnail header private 96 px/Settings 192 px, tanpa paid image transformation atau rewrite foto asli.
+- [x] Tambahkan audit kualitas halaman ke performance gate; catat hasil akhir pada PR.
+- [ ] Audit ulang dashboard dengan sesi pengguna nyata dan ekstensi Chrome dimatikan; CI memakai fixture, bukan akun hosted pengguna.

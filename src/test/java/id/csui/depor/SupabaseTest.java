@@ -50,4 +50,25 @@ class SupabaseTest {
   assertEquals(Set.of("a/photo.jpg"),signed.keySet());assertTrue(signed.get("a/photo.jpg").startsWith("http://127.0.0.1:"));assertEquals("Bearer user-token",observed.get());assertTrue(observedBody.get().contains("\"expiresIn\":900"));assertTrue(observedBody.get().contains("\"paths\""));
  }
 
+ @Test void avatarDownloadIsBoundedAuthenticatedAndNeverFollowsRedirects() {
+  var hits=new java.util.concurrent.atomic.AtomicInteger();
+  server.createContext("/storage/v1/object/authenticated/depor-avatars/own/image.jpg",e->{
+   assertEquals("Bearer user-token",e.getRequestHeaders().getFirst("Authorization"));assertEquals("test-anon-key",e.getRequestHeaders().getFirst("apikey"));
+   e.getResponseHeaders().add("Content-Type","image/jpeg");e.sendResponseHeaders(200,3);e.getResponseBody().write(new byte[]{(byte)255,(byte)216,1});e.close();
+  });
+  server.createContext("/storage/v1/object/authenticated/depor-avatars/large.jpg",e->{e.getResponseHeaders().add("Content-Type","image/jpeg");e.sendResponseHeaders(200,524289);e.close();});
+  server.createContext("/storage/v1/object/authenticated/depor-avatars/redirect.jpg",e->{e.getResponseHeaders().add("Location","/private-target");e.sendResponseHeaders(302,-1);e.close();});
+  server.createContext("/private-target",e->{hits.incrementAndGet();e.sendResponseHeaders(200,-1);e.close();});server.start();
+  assertArrayEquals(new byte[]{(byte)255,(byte)216,1},db.downloadAvatar("own/image.jpg","user-token"));
+  assertEquals(502,assertThrows(ApiException.class,()->db.downloadAvatar("large.jpg","user-token")).status);
+  assertEquals(502,assertThrows(ApiException.class,()->db.downloadAvatar("redirect.jpg","user-token")).status);assertEquals(0,hits.get());
+ }
+ @Test void avatarDownloadRejectsDeniedHtmlAndChunkedOversizeResponses() {
+  reply("/storage/v1/object/authenticated/depor-avatars/denied.jpg",403,"private details");
+  reply("/storage/v1/object/authenticated/depor-avatars/html.jpg",200,"private html");
+  server.createContext("/storage/v1/object/authenticated/depor-avatars/chunked.jpg",e->{e.getResponseHeaders().add("Content-Type","image/jpeg");e.sendResponseHeaders(200,0);try{e.getResponseBody().write(new byte[524289]);}finally{e.close();}});server.start();
+  assertEquals(403,assertThrows(ApiException.class,()->db.downloadAvatar("denied.jpg","user-token")).status);
+  assertEquals(502,assertThrows(ApiException.class,()->db.downloadAvatar("html.jpg","user-token")).status);
+  assertEquals(502,assertThrows(ApiException.class,()->db.downloadAvatar("chunked.jpg","user-token")).status);
+ }
 }

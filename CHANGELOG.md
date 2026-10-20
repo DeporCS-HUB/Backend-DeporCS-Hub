@@ -91,3 +91,11 @@ Migration core dan events_profiles bertanggal 2026-10-08 menyiapkan schema, RLS,
 - Papan/daftar menyediakan tautan program dan jenis Proker/UKOR; tugas lama tanpa induk mendapat label, hitungan dan filter Perlu ditautkan serta aksi penautan manual.
 - Database menolak tugas baru tanpa program/detachment; izin BPH/PJ dan status parsial legacy dipertahankan. Directory/summary bertambah kind/unlinked tanpa extra cold request.
 - Tidak mengubah akun, password, program, assignment atau record bisnis secara otomatis. Pengujian disposable dan browser fixture tidak memakai kredensial pengguna nyata.
+
+
+## 2026-10-20 — Feedback Lighthouse
+
+- Perbaiki urutan heading dashboard dan robots.txt yang sebelumnya jatuh ke fallback HTML.
+- Frontend Vercel memakai proxy /api pada origin web, dengan private/no-store dan origin checks tetap berlaku; sesi lama mungkin meminta login ulang sekali.
+- Header/Settings memakai JPEG thumbnail dari endpoint terautentikasi tanpa paid resize; foto tersimpan tidak dimodifikasi. Upload baru 256 px.
+- Gate Lighthouse bertambah pemeriksaan Accessibility/SEO/heading/robots dan tes browser proxy-cookie nyata dengan fixture. Peringatan minifikasi dari ekstensi Chrome dicatat sebagai faktor lingkungan.
