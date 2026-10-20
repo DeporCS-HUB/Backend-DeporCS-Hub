@@ -23,7 +23,7 @@ class ApiTest {
  Principal member(){return new Principal(uid,"member","Test Member","member-token");}
  Principal staff(){return new Principal(uid,"staff","Test Staff","staff-token");}
  @BeforeEach void auth(){when(db.authenticate("member-token")).thenReturn(member());when(db.authenticate("staff-token")).thenReturn(staff());}
- String task(String assignee){return "{\"title\":\"Prepare proposal\",\"description\":null,\"program_id\":null,\"assignee_id\":"+assignee+",\"status\":\"To Do\",\"priority\":\"Medium\",\"due_date\":null}";}
+ String task(String assignee){return "{\"title\":\"Prepare proposal\",\"description\":null,\"program_id\":\"00000000-0000-0000-0000-000000000010\",\"assignee_id\":"+assignee+",\"status\":\"To Do\",\"priority\":\"Medium\",\"due_date\":null}";}
  @Test void healthPublic() throws Exception {mvc.perform(get("/api/health")).andExpect(status().isOk()).andExpect(jsonPath("$.data.runtime").value("Java 21"));}
  @Test void protectedListRequiresToken() throws Exception {mvc.perform(get("/api/programs")).andExpect(status().isUnauthorized());verifyNoInteractions(db);}
  @Test void invalidTokenFailsClosed() throws Exception {when(db.authenticate("forged")).thenThrow(new ApiException(401,"UNAUTHENTICATED","Invalid"));mvc.perform(get("/api/dashboard").header("Authorization","Bearer forged")).andExpect(status().isUnauthorized());}
@@ -128,6 +128,12 @@ class ApiTest {
  }
  @Test void invalidListFilterNeverReachesDatabase() throws Exception {
   mvc.perform(get("/api/programs?status=Done").header("Authorization","Bearer member-token")).andExpect(status().isBadRequest());
+  verify(db,never()).request(any(),any(),any(),any());
+ }
+ @Test void taskParentIsRequiredForCreateAndFullEdit() throws Exception {
+  String missing=task("null").replace("\"program_id\":\"00000000-0000-0000-0000-000000000010\"", "\"program_id\":null");
+  mvc.perform(post("/api/tasks").header("Authorization","Bearer staff-token").contentType(MediaType.APPLICATION_JSON).content(missing)).andExpect(status().isBadRequest());
+  mvc.perform(put("/api/tasks/"+row).header("Authorization","Bearer staff-token").contentType(MediaType.APPLICATION_JSON).content(missing)).andExpect(status().isBadRequest());
   verify(db,never()).request(any(),any(),any(),any());
  }
 }

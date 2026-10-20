@@ -18,10 +18,10 @@ do $$declare result jsonb;begin
  exception when check_violation then null;end;
  if (select name from public.programs where id='91000000-0000-0000-0000-000000000001')<>'Shared unit' or (select count(*) from public.program_assignees)<>2 then raise exception 'failed assignment changed program or removed PJ';end if;
 end$$;
-insert into public.tasks(title,status,assignee_id,due_date) values
- ('Finished task','Done','90000000-0000-0000-0000-000000000002',null),
- ('Overdue task','To Do','90000000-0000-0000-0000-000000000002',(now() at time zone 'Asia/Jakarta')::date-1),
- ('Unassigned document','To Do',null,null);
+insert into public.tasks(program_id,title,status,assignee_id,due_date) values
+ ('91000000-0000-0000-0000-000000000001','Finished task','Done','90000000-0000-0000-0000-000000000002',null),
+ ('91000000-0000-0000-0000-000000000001','Overdue task','To Do','90000000-0000-0000-0000-000000000002',(now() at time zone 'Asia/Jakarta')::date-1),
+ ('91000000-0000-0000-0000-000000000001','Unassigned document','To Do',null,null);
 set local request.jwt.claim.sub='90000000-0000-0000-0000-000000000002';
 update public.programs set progress=40,progress_notes='Selection underway' where id='91000000-0000-0000-0000-000000000001';
 do $$declare metrics jsonb;begin

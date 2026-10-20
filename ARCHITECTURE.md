@@ -98,3 +98,8 @@ Pemulihan sesi dimulai sebelum render React, bersamaan dengan preload kode route
 `workspace_directory` menggabungkan opsi akun/program ringkas. `task_board` mengembalikan summary + lima slice dari satu filtered CTE materialized, sementara deskripsi dimuat saat Detail/Edit. `dashboard_overview` menghitung chart dari data RLS yang sama tanpa financial/inventory reads. Backend memverifikasi Auth/profile setiap request dan meneruskan JWT, tidak menambah TTL principal/token atau memakai service role.
 
 Frontend memiliki gate CI `npm run test:performance` atas build production, fixture 17 akun/14 program/100 tugas, API delay 400 ms, RTT 150 ms/1.6 Mbps/CPU 4×, median 3 run. Budget: initial JS ≤86 KiB gzip; data siap ≤2.5 s; request awal dashboard ≤2 dan program/board ≤3 termasuk refresh, tanpa foto; kembali ke board hangat ≤250 ms. Lighthouse mobile median ≥90, LCP ≤2.5 s, TBT ≤200 ms, CLS ≤0.1 untuk login/dashboard/board. Hasil fixture ini tidak membuktikan latensi Auth/API akun hosted atau cold start Vercel.
+
+
+## Program sebagai induk tugas — 20 Oktober 2026
+
+Tidak ada tabel aktivitas baru: tasks.program_id menjadi induk wajib untuk pekerjaan kecil Proker/UKOR. Frontend memakai endpoint tasks yang sama, auto-parent dalam workspace dan require parent di papan agregat. DTO API menolak create/full update tanpa induk; trigger database juga menolak insert null dan detachment melalui Data API langsung. Legacy null dipertahankan untuk klasifikasi manual dengan aturan akses lama. Directory dan board snapshot tetap berbagi cache per akun; penambahan kind/unlinked tidak menambah request awal.

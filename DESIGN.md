@@ -101,3 +101,10 @@ Foto bundar 29 px pada assignment dan 38 px di Tim; object-fit cover, lazy loadi
 ### Perceived loading
 
 Route-code preload berjalan sejajar pemeriksaan sesi; tidak menampilkan data akun sebelum verifikasi. Board merender kartu ringkas; Detail/Edit menunggu record penuh, menampilkan error di halaman bila gagal, dan tidak membuka form kosong. Tombol/status tidak menganggap request gagal sebagai sukses. Struktur visual, warna, identitas foto dan keyboard status tetap dipertahankan.
+
+
+## Konteks tugas kecil — 20 Oktober 2026
+
+Papan utama menyebut rekap tugas pelaksanaan Proker/UKOR. Kartu dan baris daftar menyediakan tautan nama program dengan jenis Proker/UKOR; program terpilih pada filter otomatis mengisi seluruh tombol create termasuk tombol tiap kolom. Editor tugas mewajibkan program, dan editor embedded menampilkan konteks program tanpa dropdown pemindahan. Nama akun/foto, status keyboard, pagination dan dialog deskripsi tetap digunakan.
+
+Tugas lama tanpa induk memakai label Perlu ditautkan dan aksi Tautkan program. Pemberitahuan ringkas menunjukkan hitungan sesuai filter dan membuka filter khusus, bukan menghapus atau menebak program. Memilih induk mempertahankan assignee bila masih BPH/PJ yang memenuhi syarat; bila tidak, pilihan assignee dikosongkan untuk ditinjau ulang.

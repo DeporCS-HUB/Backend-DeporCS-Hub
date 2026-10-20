@@ -17,7 +17,7 @@ public class Inputs {
  public record Note(@NotBlank @Size(max=2000) String body) {}
  public record Milestone(@NotBlank @Size(max=160) String title,LocalDate due_date,@NotBlank @Pattern(regexp="Planned|Done") String status) {}
  public record TaskStatus(@NotBlank @Pattern(regexp="Backlog|To Do|In Progress|Review|Done") String status,java.time.Instant expected_updated_at) {}
- public record Task(@NotBlank @Size(max=160) String title,@Size(max=2000) String description,UUID program_id,UUID assignee_id,@NotBlank @Pattern(regexp="Backlog|To Do|In Progress|Review|Done") String status,@NotBlank @Pattern(regexp="Low|Medium|High") String priority,LocalDate due_date) {}
+ public record Task(@NotBlank @Size(max=160) String title,@Size(max=2000) String description,@NotNull(message="Pilih Proker/UKOR untuk tugas ini.") UUID program_id,UUID assignee_id,@NotBlank @Pattern(regexp="Backlog|To Do|In Progress|Review|Done") String status,@NotBlank @Pattern(regexp="Low|Medium|High") String priority,LocalDate due_date) {}
  public record Finance(@NotBlank @Size(max=200) String description,UUID program_id,@NotBlank @Pattern(regexp="income|expense") String type,@NotNull @DecimalMin(value="0",inclusive=false) @Digits(integer=13,fraction=2) BigDecimal amount,@NotBlank @Size(max=80) String category,@NotNull LocalDate transaction_date,@NotBlank @Pattern(regexp="pending|approved|rejected") String status) {}
  public record Inventory(@NotBlank @Size(max=160) String name,@NotBlank @Size(max=80) String category,@NotNull @Min(0) @Max(1000000) Integer quantity,@NotBlank @Pattern(regexp="Available|Borrowed|Maintenance|Lost") String status,@NotBlank @Pattern(regexp="Baik|Perawatan|Rusak") String condition,@Size(max=16) String emoji,@Size(max=160) String location) {}
 }

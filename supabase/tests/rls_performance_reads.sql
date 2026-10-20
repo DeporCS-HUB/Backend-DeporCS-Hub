@@ -15,7 +15,12 @@ end$$;
 insert into public.tasks(title,description,program_id,assignee_id,status,priority,due_date)
  select 'Fixture '||n,'Needle fixture',current_setting('test.perf_program')::uuid,'95000000-0000-0000-0000-000000000002',
  (array['Backlog','To Do','In Progress','Review','Done'])[1+(n%5)],case when n%2=0 then 'High' else 'Low' end,current_date-1 from generate_series(1,100)n;
+-- Simulate an existing legacy row; privileged setup only, never hosted.
+reset role;
+alter table public.tasks disable trigger task_program_required;
 insert into public.tasks(title) values('BPH personal');
+alter table public.tasks enable trigger task_program_required;
+set local role authenticated;
 do $$declare board jsonb; later jsonb; directory jsonb; compact jsonb; full_data jsonb; filters jsonb;begin
  board=public.task_board();
  if board#>'{columns,To Do,items,0}'?'description' then raise exception 'board overfetches details';end if;
