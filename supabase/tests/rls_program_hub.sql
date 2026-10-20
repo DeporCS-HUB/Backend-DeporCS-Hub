@@ -20,7 +20,12 @@ do $$declare p jsonb;begin
  begin perform public.save_program(null,'{"name":"Invalid","status":"Planning","pic":"Text only"}');raise exception 'text-only assignment accepted';exception when check_violation then null;end;
 end$$;
 insert into public.tasks(title,program_id,assignee_id,due_date) select 'Scoped '||n,current_setting('test.program')::uuid,'94000000-0000-0000-0000-000000000002',(now() at time zone 'Asia/Jakarta')::date-1 from generate_series(1,105)n;
+-- Simulate an existing legacy row; privileged setup only, never hosted.
+reset role;
+alter table public.tasks disable trigger task_program_required;
 insert into public.tasks(title) values('Unlinked BPH task');
+alter table public.tasks enable trigger task_program_required;
+set local role authenticated;
 insert into public.events(name,venue,program_id,start_date,end_date) values('Private event','Court',current_setting('test.program')::uuid,current_date,current_date);
 insert into public.finances(description,program_id,type,amount,category,transaction_date) values('Private finance',current_setting('test.program')::uuid,'expense',1,'Fixture',current_date);
 do $$begin

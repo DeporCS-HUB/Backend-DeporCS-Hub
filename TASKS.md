@@ -88,3 +88,14 @@ Release CI/deployment commit final dicatat pada PR iterasi ini. QA-01 hosted log
 - [x] Gate performa mobile pada production build; uji role/pagination/description dan kompresi.
 - [x] Migration development 20261020032751_performance_reads, tanpa perubahan data/akun.
 - [ ] Catat hasil CI dan deployment final pada PR release.
+
+
+## Tugas kecil di dalam program — 20 Oktober 2026
+
+- [x] Parent Proker/UKOR wajib pada form/API dan insert database; detachment ditolak.
+- [x] Create pada tab program otomatis berinduk; papan agregat menautkan kembali ke program.
+- [x] Tugas legacy tetap tersimpan dengan filter/aksi Perlu ditautkan; tanpa pemetaan otomatis.
+- [x] Pertahankan izin BPH/PJ, assignment akun, deskripsi penuh, status parsial dan performance budget.
+- [ ] Pilih program untuk record legacy melalui aplikasi oleh pengguna yang berhak; tidak ada tebakan/backfill otomatis.
+
+Bukti validasi dan rilis dicatat pada PR perubahan ini; jumlah tes historis tidak menggantikan hasil CI terbaru.

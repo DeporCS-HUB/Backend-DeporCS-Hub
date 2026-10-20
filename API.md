@@ -59,7 +59,7 @@ List menerima page 0–100000, default 0; size 1–100, default 50. Urutan event
 | Resource | Kolom pencarian q | Filter tambahan |
 | --- | --- | --- |
 | programs | name, pic, description, progress_notes | status, kind |
-| tasks | title, description | status, priority, program_id, assignee_id, scope |
+| tasks | title, description | status, priority, program_id, program_scope, assignee_id, scope |
 | events | name, venue, description | status, permit_status |
 | inventory | name, category, location | status |
 | finances | description, category | status, type |
@@ -74,7 +74,7 @@ Create menghasilkan 201. Edit/delete berhasil menghasilkan 200. Delete mengembal
 | Operasi | BPH | Staff aktif |
 | --- | --- | --- |
 | Membaca program dan data terkait | Semua | Hanya program dengan UUID PJ; termasuk tugas, finance/event terkait, agenda, catatan dan audit |
-| Membaca tugas mandiri tanpa program | Semua | Creator/assignee saja |
+| Membaca tugas legacy tanpa program | Semua | Creator/assignee saja |
 | Agenda dan catatan program | Kelola agenda; tambah catatan | Sama, hanya program yang ditangani |
 | CRUD program lengkap, finance, inventory, events | Ya | Tidak |
 | Update progres program | Ya | Hanya PJ yang terhubung UUID |
@@ -128,7 +128,7 @@ Hanya tiga field ini diterima. Progress dan catatan dapat null. Anggaran, nama, 
 
 | Resource | Wajib | Opsional |
 | --- | --- | --- |
-| tasks | title, status, priority | description, program_id, assignee_id, due_date |
+| tasks | title, program_id, status, priority | description, assignee_id, due_date |
 | finances | description, type, amount, category, transaction_date, status | program_id |
 | inventory | name, category, quantity, status, condition | emoji, location |
 | events | name, venue, start_date, end_date, status, permit_status | description, program_id |
@@ -187,11 +187,11 @@ Timeline memakai id gabungan, kind=progress/note, actor_id, body, created_at, st
 
 Filter tugas tambahan: program_id dan assignee_id harus UUID canonical; scope kosong/all, mine, overdue atau unassigned. mine memakai identitas terverifikasi; overdue berarti status bukan Done dan due_date sebelum hari ini Asia/Jakarta. Pencarian/filter dilakukan sebelum pagination. Summary memakai filter yang sama dan RLS; workload hanya untuk BPH, berisi assignee_id,total,done,open,overdue. Null assignee adalah kelompok belum ada PJ. Tidak mengarang skor atau menghitung total dari kartu yang sedang dimuat.
 
-Tugas terkait program hanya dapat dibaca BPH/PJ. Tugas mandiri hanya BPH/creator/assignee. Mutasi Staff tetap creator/assignee dan hanya dapat memilih diri sendiri. Assignment baru/reassign harus akun aktif; untuk tugas terkait, akun harus BPH atau PJ program tersebut. Assignment tugas tidak otomatis memberi akses program. Relasi lama tidak ditulis ulang; perubahan status yang tidak mengubah relasi tetap dapat dilakukan pemilik yang berhak.
+Tugas terkait program hanya dapat dibaca BPH/PJ. Tugas legacy tanpa program hanya BPH/creator/assignee. Tugas baru wajib berinduk. Mutasi Staff tetap creator/assignee dan hanya dapat memilih diri sendiri. Assignment baru/reassign harus akun aktif; untuk tugas terkait, akun harus BPH atau PJ program tersebut. Assignment tugas tidak otomatis memberi akses program. Relasi lama tidak ditulis ulang; perubahan status yang tidak mengubah relasi tetap dapat dilakukan pemilik yang berhak.
 
 Status-only update menghindari penimpaan deskripsi/assignment saat drag/drop. Jika expected_updated_at sudah berubah, hasilnya 409 dan UI meminta muat ulang. Ini bukan optimistic locking menyeluruh untuk edit lengkap/agenda. Write gagal mempertahankan status lama; tombol muat ulang adalah read/invalidation, bukan mutasi bisnis.
 
-Semua agregat dashboard sekarang mencakup row yang boleh dibaca caller: BPH seluruh departemen, Staff program yang ditangani dan tugas mandirinya. Status program, PJ dan detail tidak bocor melalui dashboard/riwayat/related tables. Directory nama akun aktif tetap tersedia untuk pilihan assignment.
+Semua agregat dashboard sekarang mencakup row yang boleh dibaca caller: BPH seluruh departemen, Staff program yang ditangani dan tugas legacy tanpa induk miliknya. Status program, PJ dan detail tidak bocor melalui dashboard/riwayat/related tables. Directory nama akun aktif tetap tersedia untuk pilihan assignment.
 
 
 ## Status program dan akun sendiri — 19 Oktober 2026
@@ -238,10 +238,17 @@ UUID invalid, list kosong/tidak diberikan atau >100 menghasilkan 400; tanpa aute
 | GET endpoint | Response data | Izin |
 | --- | --- | --- |
 | `/dashboard/overview` | overview, enam field summary KPI, programFocus ≤30, programStatusCounts, staffPerformance chart | JWT + profile aktif; invoker/RLS |
-| `/directory` | profiles aktif (id/name/role/active/avatar_path), programs (id/name/assignee_ids) | Scope program BPH/PJ; tanpa description, budget, email Auth |
+| `/directory` | profiles aktif (id/name/role/active/avatar_path), programs (id/name/kind/assignee_ids) | Scope program BPH/PJ; tanpa description, budget, email Auth |
 | `/tasks/board` | summary global sesuai filter, columns untuk lima status berisi items ≤12 dan hasMore | Izin task yang sama; workload hanya BPH |
 | `/tasks/:id` | Satu record tugas penuh, termasuk description, atau 404 | RLS, tidak menambah izin edit |
 
 Board menerima q, program_id, assignee_id, priority, status, scope seperti daftar lama; `pages=0,0,0,0,0` mengikuti Backlog/To Do/In Progress/Review/Done. Tepat lima integer 0–100000; parameter page/size ditolak 400. Setiap kolom memiliki page sendiri; mengganti filter mereset semua page. Summary menghitung seluruh hasil filter, bukan slice kartu. Description tidak dikirim pada board; Detail/Edit mengambil record lengkap dan Edit memaksa read baru agar tidak menimpa deskripsi kosong. Error read tidak membuka editor kosong.
 
 Endpoint `/dashboard` tetap menyediakan kontrak finansial lama untuk Keuangan; `/dashboard/overview` tidak menghitung/mengirim finance, inventory, agenda atau teks panjang. Directory/board/overview masing-masing satu RPC dengan JWT caller, tanpa cache principal/data server, tanpa bypass RLS. Respons JSON ≥1024 byte dapat memakai gzip bila client mendukung; Cache-Control tetap no-store. Tidak ada auth/data dalam CDN publik.
+
+
+## Tugas pelaksanaan Proker/UKOR — 20 Oktober 2026
+
+POST /tasks dan PUT /tasks/{id} mewajibkan program_id berupa UUID selain title/status/priority; omission/null ditolak 400. Full edit record legacy sekaligus menautkan induknya. PUT /tasks/{id}/status tetap parsial sehingga status legacy tidak terblokir. Caller JWT/RLS dan aturan Staff self-assignment tidak berubah.
+
+GET /tasks, /tasks/summary dan /tasks/board menerima program_scope kosong, linked atau unlinked, terpisah dari scope=unassigned (assignee kosong). Kedua summary menambahkan unlinked, hitungan record tanpa induk setelah semua filter; workload tetap hanya BPH. List/board memakai filter yang sama sebelum pagination. GET /directory menambahkan kind pada setiap program, tanpa request tambahan. RPC baru/yang diperbarui tetap SECURITY INVOKER dengan EXECUTE hanya authenticated.

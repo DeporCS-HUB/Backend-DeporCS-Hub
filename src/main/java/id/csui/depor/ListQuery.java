@@ -24,7 +24,7 @@ final class ListQuery {
   var allowed=new HashSet<>(List.of("page","size","q"));
   if(STATUS.containsKey(table)) allowed.add("status");
   if(table.equals("programs"))allowed.add("kind");
-  if(table.equals("tasks"))allowed.addAll(List.of("priority","program_id","assignee_id","scope"));
+  if(table.equals("tasks"))allowed.addAll(List.of("priority","program_id","assignee_id","scope","program_scope"));
   if(table.equals("events"))allowed.add("permit_status");
   if(table.equals("finances"))allowed.add("type");
   if(table.equals("profiles"))allowed.add("departmentRole");
@@ -56,6 +56,9 @@ final class ListQuery {
      result.append('&').append(key).append("=eq.").append(value);
     }
    }
+   String programScope=input.getOrDefault("program_scope","");
+   if(!Set.of("","linked","unlinked").contains(programScope))throw invalid();
+   if(!programScope.isEmpty())result.append(programScope.equals("linked")?"&program_id=not.is.null":"&program_id=is.null");
    String scope=input.getOrDefault("scope","");
    if(!Set.of("","all","mine","overdue","unassigned").contains(scope))throw invalid();
    if(scope.equals("unassigned"))result.append("&assignee_id=is.null");

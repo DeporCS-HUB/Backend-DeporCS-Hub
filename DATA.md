@@ -17,7 +17,7 @@ Dokumen ini menjelaskan schema dan migration pada backend. Migrasi dashboard_cov
 | `program_notes` | id, program_id, body, created_by, created_at | Pembaruan manual append-only oleh BPH/PJ |
 | `program_milestones` | id, program_id, title, due_date, status, created_by, created_at, updated_at | Agenda/tahapan editable BPH/PJ |
 | `program_updates` | id, program_id, actor_id, status, progress, notes, created_at | Riwayat perubahan progres yang dibuat trigger |
-| `tasks` | id, title, description, program_id, assignee_id, status, priority, due_date | Tugas yang dapat berdiri sendiri atau terhubung kegiatan |
+| `tasks` | id, title, description, program_id, assignee_id, status, priority, due_date | Tugas kecil pelaksanaan Proker/UKOR; null hanya legacy |
 | `finances` | id, description, program_id, type, amount, category, transaction_date, status | Catatan pemasukan/pengeluaran |
 | `inventory` | id, name, category, quantity, status, condition, emoji, location | Jumlah aset per record; emoji lama tidak ditampilkan |
 | `events` | id, name, description, program_id, venue, start_date, end_date, status, permit_status | Jadwal dan pencatatan izin venue manual |
@@ -131,3 +131,10 @@ Migrasi `team_avatar_read` menambah hanya policy SELECT `depor_avatar_department
 ### RPC pembacaan ringkas
 
 Migration performance_reads hanya membuat workspace_directory(), task_board(jsonb, integer[]) dan dashboard_overview(), semuanya STABLE SECURITY INVOKER, search_path kosong, EXECUTE hanya authenticated. Tidak mengubah tabel, akun, assignment, policy, password atau business rows. Board mempunyai lima slice maksimum 12 row, pagination global terfilter dan summary parity dengan task_summary. Dashboard compact menjaga total, null progress, distribusi status, serta kontribusi Staff; fungsi dashboard_stats lama dipertahankan untuk Keuangan.
+
+
+## Parent tugas wajib — 20 Oktober 2026
+
+Tugas baru memerlukan tasks.program_id yang menunjuk satu Proker/UKOR. Trigger invoker private.require_task_program menolak INSERT dengan program null serta UPDATE yang melepas relasi non-null menjadi null (23514). FK RESTRICT tetap melindungi program dengan tugas. Kolom masih nullable untuk mempertahankan record legacy tanpa backfill rekaan; perubahan status parsial legacy tetap diizinkan, sedangkan full update API mewajibkan induk.
+
+RLS program/tugas dan guard akun PJ yang sudah ada tidak diperluas. workspace_directory menambahkan kind pada opsi program. task_summary dan task_board menambahkan unlinked (jumlah program_id null sesuai filter/RLS), serta filter program_scope linked/unlinked. Status, riwayat, akun, password dan data bisnis tidak diubah oleh migration. Dashboard tetap menghitung semua tugas yang berhak dilihat, termasuk legacy sampai ditautkan.

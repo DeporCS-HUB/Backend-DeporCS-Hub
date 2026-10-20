@@ -120,3 +120,8 @@ Foto profil yang disimpan kini terlihat bagi akun departemen aktif di Tim, PJ pr
 ### Performance gate
 
 Frontend: `npm run build && npm run test:performance` (setelah Chromium Playwright tersedia). Mengukur build production dengan API fixture, bukan akun nyata. Laporan JSON tersedia pada test-results/performance.json; batas dan hasil sebelum/sesudah ada di frontend docs/loading-performance.md. Lighthouse/chrome-launcher adalah dev-only dan tidak masuk bundle aplikasi. Backend tetap `mvn verify`; test kompresi menjalankan HTTP server lokal nyata, SQL hanya database disposable.
+
+
+### Tugas pelaksanaan Proker/UKOR
+
+Buka Program → Buka program → Tugas untuk menambah pekerjaan kecil di program tersebut. Papan tugas utama menjadi rekap lintas program yang terlihat oleh akun; create dari papan wajib memilih Proker/UKOR. Klik nama program pada kartu untuk kembali ke ruang kerjanya. Tugas lama berlabel Perlu ditautkan dapat dipilihkan induk lewat Tautkan program; tidak ada penghapusan atau pemetaan otomatis.

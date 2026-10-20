@@ -20,4 +20,11 @@ class ListQueryTest {
   assertEquals("&role=eq.member",ListQuery.filters("profiles",Map.of("departmentRole","staff")));
   assertEquals("&status=eq.In%20Progress&priority=eq.High",ListQuery.filters("tasks",Map.of("status","In Progress","priority","High")));
  }
+ @Test void taskProgramScopeDistinguishesLegacyFromUnassigned() {
+  assertEquals("&program_id=is.null",ListQuery.filters("tasks",Map.of("program_scope","unlinked")));
+  assertEquals("&program_id=not.is.null",ListQuery.filters("tasks",Map.of("program_scope","linked")));
+  assertEquals("&program_id=is.null&assignee_id=is.null",ListQuery.filters("tasks",Map.of("program_scope","unlinked","scope","unassigned")));
+  assertThrows(ApiException.class,()->ListQuery.filters("tasks",Map.of("program_scope","is.null,or=(id.eq.x)")));
+  assertThrows(ApiException.class,()->ListQuery.filters("programs",Map.of("program_scope","unlinked")));
+ }
 }

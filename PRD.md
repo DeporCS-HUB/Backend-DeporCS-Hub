@@ -66,7 +66,7 @@ Uji pengguna dapat menemukan progres sebuah kegiatan, mengidentifikasi data belu
 ## Iterasi workspace program dan pelacakan BPH — 19 Oktober 2026
 
 - Setiap Proker/UKOR memiliki URL /programs/:id dengan ringkasan, tugas terkait, timeline pembaruan dan agenda editable.
-- Hanya BPH aktif dan akun PJ yang terhubung UUID dapat membaca program dan record terkait; perubahan PJ mencabut akses. BPH mengelola profil/PJ. Tugas mandiri privat bagi owner/assignee, BPH dapat memantau semuanya.
+- Hanya BPH aktif dan akun PJ yang terhubung UUID dapat membaca program dan record terkait; perubahan PJ mencabut akses. BPH mengelola profil/PJ. Record legacy tanpa induk tetap privat bagi owner/assignee; BPH dapat memantau semuanya. Tugas baru wajib berinduk Proker/UKOR.
 - Pemilihan PJ/assignee berasal dari akun aktif; teks nama bebas tidak digunakan untuk otorisasi. Assignment tugas tidak memberikan akses program.
 - BPH memantau total/status/terlambat/belum ada PJ serta beban per akun dari seluruh hasil filter. Papan/daftar, drag/drop dan kontrol status keyboard, filter program/PJ/prioritas/pencarian/tugas saya, serta pagination per kolom harus tersedia.
 - Timeline menggabungkan audit progres nyata dan catatan manual. Agenda mendukung create/edit/complete/reopen/delete dengan tanggal kosong tetap null. Tidak menambahkan data sejarah, lampiran atau komentar tugas palsu.
@@ -92,3 +92,10 @@ Uji pengguna dapat menemukan progres sebuah kegiatan, mengidentifikasi data belu
 ## Faster-load acceptance — 20 Oktober 2026
 
 Data dashboard/program/board harus siap dalam median ≤2.5 s pada fixture mobile yang didokumentasikan; Lighthouse mobile median ≥90 dengan LCP/TBT/CLS hijau. Gate request dan ukuran bundle mencegah kembali ke delapan request board terpisah. Filter/pagination/drag/drop, angka KPI global, data null, foto, akses BPH/PJ dan penyimpanan description setelah edit harus tetap benar. Skor visual tinggi saja tidak dianggap bukti data operasional sudah cepat.
+
+
+## Tugas pelaksanaan program — 20 Oktober 2026
+
+Hierarki pekerjaan: **Proker/UKOR → tugas kecil pelaksanaan**. Papan utama adalah rekap lintas program yang dapat diakses; tab Tugas pada ruang kerja program berisi tugas program itu saja. Setiap create dan full edit wajib memilih program induk, sementara dari ruang kerja program induk otomatis terkunci. Contoh judul tugas: konfirmasi lapangan atau siapkan formulir seleksi; tidak membuat program baru untuk tiap pekerjaan kecil.
+
+Tugas lama tanpa program tetap tersimpan, ditandai Perlu ditautkan, dan dapat difilter lalu ditautkan melalui editor. Program tidak ditebak dari judul. Status tugas lama masih dapat diperbarui secara parsial. Penautan tidak mengubah akses BPH/PJ dan assignment bukan sumber izin program. Persentase progres program tetap input eksplisit, tidak dihitung otomatis dari jumlah tugas.

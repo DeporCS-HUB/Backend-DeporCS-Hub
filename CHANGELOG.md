@@ -83,3 +83,11 @@ Migration core dan events_profiles bertanggal 2026-10-08 menyiapkan schema, RLS,
 - Board turun dari delapan request data awal menjadi dua (di luar foto/session), dengan satu snapshot RLS untuk seluruh kolom dan summary. Directory mengecualikan deskripsi/history; deskripsi tugas diambil sebelum Detail/Edit.
 - Dashboard chart memakai payload terpisah dari finansial/inventaris; endpoint lama Keuangan tetap tersedia. Session/code route mulai paralel, Layout dan program Tasks tab dipisahkan. Gzip JSON mempertahankan no-store.
 - Performance gate CI mencakup mobile data-ready, request/bundle budget, dan Lighthouse. Tes role serta summary parity memastikan batching tidak memperluas akses. Tidak menambah layanan berbayar atau mengubah business rows.
+
+
+## 2026-10-20 — Tugas kecil pelaksanaan Proker/UKOR
+
+- Setiap tugas baru/full edit wajib memiliki program; embedded create auto-parent dan seluruh create dari filter program mengisi induk.
+- Papan/daftar menyediakan tautan program dan jenis Proker/UKOR; tugas lama tanpa induk mendapat label, hitungan dan filter Perlu ditautkan serta aksi penautan manual.
+- Database menolak tugas baru tanpa program/detachment; izin BPH/PJ dan status parsial legacy dipertahankan. Directory/summary bertambah kind/unlinked tanpa extra cold request.
+- Tidak mengubah akun, password, program, assignment atau record bisnis secara otomatis. Pengujian disposable dan browser fixture tidak memakai kredensial pengguna nyata.
