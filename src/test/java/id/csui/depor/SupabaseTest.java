@@ -44,4 +44,10 @@ class SupabaseTest {
   db.request(HttpMethod.GET,"/rest/v1/programs?select=*"+filters,"user-token",null);
   assertEquals("select=*"+filters,raw.get());
  }
+ @Test void batchSigningUsesOneUserJwtRequestAndRejectsUntrustedOrWrongPaths() {
+  reply("/storage/v1/object/sign/depor-avatars",200,"[{\"path\":\"a/photo.jpg\",\"signedURL\":\"/object/sign/depor-avatars/a/photo.jpg?token=ok\",\"error\":null},{\"path\":\"b/photo.jpg\",\"signedURL\":\"https://evil.invalid/photo\",\"error\":null},{\"path\":\"c/photo.jpg\",\"signedURL\":null,\"error\":\"not found\"},{\"path\":\"unrequested.jpg\",\"signedURL\":\"/object/sign/depor-avatars/unrequested.jpg?token=no\",\"error\":null}]");server.start();
+  var signed=db.signedAvatars(List.of("a/photo.jpg","b/photo.jpg","c/photo.jpg"),"user-token");
+  assertEquals(Set.of("a/photo.jpg"),signed.keySet());assertTrue(signed.get("a/photo.jpg").startsWith("http://127.0.0.1:"));assertEquals("Bearer user-token",observed.get());assertTrue(observedBody.get().contains("\"expiresIn\":900"));assertTrue(observedBody.get().contains("\"paths\""));
+ }
+
 }

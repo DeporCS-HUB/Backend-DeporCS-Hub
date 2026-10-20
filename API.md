@@ -205,10 +205,29 @@ Pilihan utama UI: **Planning / On Going / Finished**. Nilai API/database tetap P
 | DELETE | /profiles/me/avatar | Hapus pointer foto sendiri dan coba hapus objek lama; avatar_path null |
 | POST | /auth/password | currentPassword (1–1024), newPassword (8–128); bearer dan Origin tepercaya wajib |
 
-Upload aplikasi menerima JPG/PNG/WebP sampai 5 MiB, memotong tengah ke persegi 512 px dan mengirim JPEG ke API. Backend memeriksa format/dimensi sebelum decode penuh, mengodekan ulang JPEG tanpa metadata, dan memakai nama file UUID di folder akun. File input/nama path/userId tidak diterima dari client. request nonimage, oversize, atau properti tambahan ditolak. Tidak ada public avatar URL untuk seluruh direktori.
+Upload aplikasi menerima JPG/PNG/WebP sampai 5 MiB, memotong tengah ke persegi 512 px dan mengirim JPEG ke API. Backend memeriksa format/dimensi sebelum decode penuh, mengodekan ulang JPEG tanpa metadata, dan memakai nama file UUID di folder akun. File input/nama path/userId tidak diterima dari client. request nonimage, oversize, atau properti tambahan ditolak. Tidak ada URL publik permanen; direktori memakai batch signed URL terautentikasi.
 
-Foto berada di bucket private depor-avatars. API hanya menandatangani foto akun caller, tanpa service role. Signed URL adalah akses sementara 15 menit; jangan disimpan sebagai URL permanen atau dicetak ke log. Profil Auth/session menambah avatar_path nullable, bukan image bytes atau signed token. UI cache akun tetap terisolasi.
+Foto berada di bucket private depor-avatars. Endpoint /me menandatangani foto sendiri; endpoint batch direktori menandatangani foto terkini anggota aktif menggunakan JWT pembaca, tanpa service role. Signed URL adalah akses sementara 15 menit; jangan disimpan sebagai URL permanen atau dicetak ke log. Profil Auth/session menambah avatar_path nullable, bukan image bytes atau signed token. UI cache akun tetap terisolasi.
 
 Upload memakai objek versi baru. Profile pointer diubah dengan kondisi nilai lama; konflik menghasilkan 409 dan foto sebelumnya tetap menjadi sumber terkonfirmasi. File lama dihapus setelah pointer berhasil berubah. Kegagalan cleanup tidak membatalkan write profile yang sudah commit. Network outcome yang ambigu dapat meninggalkan objek privat yatim; jangan menghapus metadata storage.objects langsung untuk membersihkannya.
 
 Password diverifikasi dengan sign-in internal menggunakan email dari Auth user terverifikasi, bukan input email/UUID. ID hasil verifikasi harus sama. Kemudian update Auth memakai session segar serta current_password. Respons sukses sama seperti sesi login, ditambah passwordChanged=true: accessToken di memori dan refresh cookie HttpOnly diganti. Password tidak masuk profile, database public, cache, localStorage atau log. Verifikasi gagal menghasilkan 400 PASSWORD_MISMATCH, bukan 401 yang memicu loop refresh. Policy password Supabase tetap berlaku. Session verifikasi sementara dibersihkan bila update gagal. Fitur ini bukan reset/invite akun lain.
+
+
+## Foto direktori tim — 20 Oktober 2026
+
+`GET /profiles` menambah `avatar_path` nullable pada field direktori yang sudah ada (tanpa email Auth). `GET /profiles/avatars?ids=<uuid>,<uuid>` menerima 1–100 UUID canonical; duplikat dideduplikasi. Memerlukan bearer dari akun aktif, BPH maupun Staff. API mencari pointer terkini pada profile aktif melalui PostgREST/RLS lalu melakukan satu request Storage batch sign. Input path/URL tidak diterima dari client. Akun tidak ditemukan/nonaktif/tanpa foto atau file hilang tidak mendapat entry.
+
+```json
+{
+  "data": {
+    "00000000-0000-0000-0000-000000000002": {
+      "path": "00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000003.jpg",
+      "url": "https://<project>.supabase.co/storage/v1/object/sign/depor-avatars/<path>?token=<temporary>"
+    }
+  },
+  "meta": { "expiresIn": 900 }
+}
+```
+
+UUID invalid, list kosong/tidak diberikan atau >100 menghasilkan 400; tanpa autentikasi 401; akun nonaktif 403. Upstream gagal menghasilkan error (bukan sukses palsu). Foto per-file gagal diabaikan; UI memakai inisial. Signed URLs jangan dicetak ke log/disimpan permanen. Hanya foto terpilih yang dibagikan; URL yang sudah diterbitkan dapat berlaku hingga expiry. PUT/DELETE foto tetap di `/profiles/me/avatar`; tidak ada endpoint mutasi foto orang lain.

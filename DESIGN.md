@@ -79,7 +79,7 @@ Periksa desktop 1440 px, tablet 768 px dan mobile 375 px dengan data panjang, ti
 
 Program memiliki header ringkas dengan jenis/status/akses dan aksi. Empat tab: Ringkasan, Tugas, Timeline, Agenda. Ringkasan dua kolom desktop: progres dan hitungan tugas di kiri, akun PJ dan agenda terdekat di kanan. Agenda Planned baru mendapat prioritas pada ringkasan; agenda lama pada profil tetap diberi label sumber. Catatan/description maksimal tiga baris dengan akses dialog lengkap. Mobile menumpuk panel.
 
-Papan tugas memakai toolbar pencarian, refresh, Papan/Daftar dan create; filter akun/program/prioritas/tugas saya; KPI actionable dengan label sesuai filter. Ringkasan beban per akun berada dalam disclosure. Setiap kolom mempunyai count global dan pagination sendiri; empty/loading/error per kolom tidak menghilangkan filter. Status tidak hanya warna: label, angka, dan select tersedia. Kartu menampilkan prioritas, judul terbatasi, program, avatar inisial akun, nama PJ, tenggat, status dan aksi; tidak menggunakan foto/stiker generatif.
+Papan tugas memakai toolbar pencarian, refresh, Papan/Daftar dan create; filter akun/program/prioritas/tugas saya; KPI actionable dengan label sesuai filter. Ringkasan beban per akun berada dalam disclosure. Setiap kolom mempunyai count global dan pagination sendiri; empty/loading/error per kolom tidak menghilangkan filter. Status tidak hanya warna: label, angka, dan select tersedia. Kartu menampilkan prioritas, judul terbatasi, program, foto profil akun (fallback inisial), nama PJ, tenggat, status dan aksi; tidak menggunakan foto/stiker generatif.
 
 Drag/drop desktop adalah tambahan, select status tetap tersedia untuk keyboard/mobile. Deadline terlambat merah, Done hijau, berjalan biru, Review kuning. Board horizontal scroll di dalam kontainer, bukan overflow viewport; pada 375 px satu kartu/kolom tetap terbaca. Muat ulang menyediakan read terbaru, tanpa mengklaim Realtime.
 
@@ -91,3 +91,8 @@ Kolom papan mempunyai tinggi terbatasi dan area kartu scroll internal. Dua belas
 Status program utama tampil Planning / On Going / Finished. Warna semantik tetap kuning/biru/hijau; nilai legacy tidak diberi progres rekaan. Dropdown baru menawarkan tiga status, nilai Unspecified/Cancelled lama hanya placeholder yang dipertahankan saat edit record lama.
 
 Settings dua kolom desktop: foto di kiri, nama/password di kanan; mobile ditumpuk tanpa overflow viewport. Pilih file tidak otomatis menyimpan: tampilkan crop preview dengan Simpan foto/Batalkan. Avatar memakai inisial sampai sumber terkonfirmasi tersedia. Password memiliki autocomplete current/new-password, konfirmasi dan toggle tampil/sembunyi; tidak memperlihatkan isi password pada pesan sukses/error. Tombol simpan disabled selama request, error tetap menyertakan pilihan/input, sukses mengosongkan field password.
+
+
+### Foto identitas anggota — 20 Oktober 2026
+
+Foto bundar 29 px pada assignment dan 38 px di Tim; object-fit cover, lazy loading, tidak draggable agar tidak mengganggu drag kartu. Nama tetap terbaca di sampingnya; multi-PJ ditumpuk ringkas dan nama panjang dibungkus di daftar program. Alt menyebut nama akun; foto rusak/kosong menampilkan inisial tanpa layout shift. Tidak ada kontrol edit foto orang lain.

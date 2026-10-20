@@ -110,3 +110,8 @@ Buka **Program → Buka program** untuk Ringkasan, Tugas, Timeline dan Agenda. A
 ### Pengaturan akun
 
 **Pengaturan** menyediakan foto profil sendiri (pilih → preview → Simpan foto / Hapus foto), nama tampilan, dan ganti password menggunakan password saat ini. Foto memakai Storage privat; tidak memerlukan env/SDK baru. Status program utama tampil **Planning / On Going / Finished** dengan enum API kompatibel. Lihat API.md/DATA.md untuk batas file, akses dan kontrak sesi.
+
+
+### Foto tim dan PJ
+
+Foto profil yang disimpan kini terlihat bagi akun departemen aktif di Tim, PJ program, dan assignment papan/daftar/detail tugas. Foto tetap dalam bucket privat dengan signed URL sementara; edit/hapus hanya pemilik. Nama dan inisial tetap tersedia bila foto kosong/gagal. Akses program/tugas mengikuti aturan BPH/PJ yang sudah ada.

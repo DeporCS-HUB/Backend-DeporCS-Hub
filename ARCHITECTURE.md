@@ -84,3 +84,8 @@ Alur foto: validasi file browser → crop/encode JPEG → API decode/dimensi/re-
 Alur password: Auth user terverifikasi → email server → password grant memverifikasi password saat ini → check ID sama → update password memakai token session segar → response mengganti access token/refresh cookie. Fresh sign-in menghindari ketergantungan pada toggle current-password project dan nonce sesi lama. Tidak menggunakan service role atau password SQL/RPC. Error validasi tidak menghapus sesi yang masih valid. Respons password tidak boleh mengembalikan snapshot nama/foto yang lebih lama dari perubahan lokal yang sudah terkonfirmasi.
 
 Pengujian HTTP adapter dan browser menggunakan upstream/API mock; SQL memakai stand-in Storage. Hosted config/RLS diperiksa terpisah. Mengganti password atau mengunggah foto akun nyata bukan bagian dari tes tanpa sesi/kredensial yang sesuai; jangan reset password untuk memperoleh bukti tersebut.
+
+
+## Foto tim dan assignment — 20 Oktober 2026
+
+Direktori mengembalikan avatar_path. AvatarDirectory menandatangani maksimal 100 ID per batch GET terdeduplikasi; API membaca pointer server lalu satu request batch ke Storage menggunakan JWT caller. Nama/foto AccountIdentity mengikuti UUID yang sama di Tim, PJ program, tugas, dan ringkasan beban. Directory dibaca semua halaman dan mengikuti scope akun/revision cache, sehingga refresh mengambil nama/path terbaru. Tidak ada N+1 request per kartu. Signed URL diperbarui setiap 12 menit saat halaman terbuka serta saat tab kembali terlihat; foto gagal kembali ke inisial. Cache hanya memori per akun; tidak ada dependency aplikasi atau layanan berbayar baru.
