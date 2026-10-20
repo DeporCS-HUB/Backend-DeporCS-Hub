@@ -69,3 +69,12 @@ QA-01 login browser hosted dengan akun nyata tetap belum ditandai selesai oleh m
 - [x] Migration development 20261019100116_profile_avatars diterapkan; bucket private/JPEG/512 KiB dan empat policy authenticated diverifikasi, tanpa mengganti foto/password akun nyata.
 
 Release CI/deployment commit final dicatat pada PR iterasi ini. QA-01 hosted login/write nyata tetap terbuka; mock, metadata Storage dan simulated JWT bukan pengganti Auth/Storage end-to-end.
+
+
+## Foto tim dan assignment — 20 Oktober 2026
+
+- [x] Akses baca foto terpilih anggota aktif untuk BPH/Staff; mutasi owner-only.
+- [x] Foto + nama pada Tim, daftar/detail PJ program, board/list/detail tugas dan beban akun.
+- [x] Batch signing, fallback inisial dan invalidasi nama/path direktori setelah refresh.
+- [x] Migration development 20261020025834_team_avatar_read; bucket tetap private dan tiga policy mutasi owner-only diverifikasi.
+- [ ] Catat CI serta deployment final pada PR release.

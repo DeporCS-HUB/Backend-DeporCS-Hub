@@ -30,6 +30,18 @@ public class Supabase {
   if(!signed.startsWith("/object/sign/depor-avatars/"+path+"?token="))throw new ApiException(502,"STORAGE_UNAVAILABLE","Foto profil belum dapat dimuat.");
   return baseUrl+"/storage/v1"+signed;
  }
+ // Batch signing keeps directory/assignment rendering to one Storage request per 100 photos.
+ public Map<String,String> signedAvatars(List<String> paths,String token) {
+  if(paths.isEmpty())return Map.of();
+  JsonNode rows=request(HttpMethod.POST,"/storage/v1/object/sign/depor-avatars",token,Map.of("expiresIn",900,"paths",paths));
+  if(!rows.isArray())throw new ApiException(502,"STORAGE_UNAVAILABLE","Foto tim belum dapat dimuat.");
+  var urls=new LinkedHashMap<String,String>();
+  for(JsonNode row:rows) {
+   String path=row.path("path").asText(),signed=row.path("signedURL").asText();
+   if(paths.contains(path)&&(row.path("error").isNull()||row.path("error").isMissingNode())&&signed.startsWith("/object/sign/depor-avatars/"+path+"?token="))urls.put(path,baseUrl+"/storage/v1"+signed);
+  }
+  return urls;
+ }
  public JsonNode request(HttpMethod method,String path,String token,Object body) {return request(method,path,token,body,MediaType.APPLICATION_JSON);}
  private JsonNode request(HttpMethod method,String path,String token,Object body,MediaType contentType) {
   try {

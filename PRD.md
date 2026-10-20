@@ -56,7 +56,7 @@ Nama, status, angka, dan tindakan utama terlihat tanpa membuka paragraf. Header 
 
 ## Batas dan non-goals saat ini
 
-Belum tersedia: undangan akun, pengelolaan role lewat UI, absensi, unggahan LPJ/lampiran, pengiriman notifikasi, izin venue eksternal, atau preferensi pengguna. Permintaan menyediakan LPJ tidak berarti fitur upload sudah ada. Pencarian tiap resource sudah memakai server sebelum pagination; pencarian lintas-resource, export, foto profil sendiri tersedia; avatar direktori orang lain dan notifikasi belum tersedia.
+Belum tersedia: undangan akun, pengelolaan role lewat UI, absensi, unggahan LPJ/lampiran, pengiriman notifikasi, izin venue eksternal, atau preferensi pengguna. Permintaan menyediakan LPJ tidak berarti fitur upload sudah ada. Pencarian tiap resource sudah memakai server sebelum pagination; pencarian lintas-resource, export, foto profil sendiri tersedia; foto anggota pada Tim/PJ program/assignment tersedia; notifikasi belum tersedia.
 
 ## Ukuran keberhasilan
 
@@ -79,4 +79,11 @@ Uji pengguna dapat menemukan progres sebuah kegiatan, mengidentifikasi data belu
 - Pilihan status program Planning / On Going / Finished, konsisten pada form/filter/badge/chart. Active lama termasuk On Going. Nilai belum diketahui dan audit historis tidak ditulis ulang.
 - Pengguna aktif dapat memilih, mempratinjau, menyimpan, mengganti dan menghapus foto sendiri; JPG/PNG/WebP maksimal 5 MiB pada browser, diproses menjadi foto persegi. Header dan Settings memakai foto terkonfirmasi, dengan inisial saat kosong/gagal dimuat.
 - Pengguna dapat mengganti password sendiri dengan password saat ini, password baru dan konfirmasi. Minimal delapan karakter, tidak sama dengan sebelumnya; policy Auth tetap berlaku. Kesalahan tidak menghapus input/sesi. Sukses membersihkan input dan mempertahankan login melalui session segar.
-- Foto privat, akun lain/BPH tidak dapat mengubah atau mengambil foto caller lewat endpoint ini. Tidak ada reset password massal atau edit role/active. Tidak menambah layanan berbayar.
+- Bucket foto privat; endpoint /me tetap untuk foto sendiri. Mulai 20 Oktober, akun aktif dapat membaca foto terpilih anggota aktif lewat endpoint direktori, tetapi tidak dapat mengubah/menghapus foto orang lain. Tidak ada reset password massal atau edit role/active. Tidak menambah layanan berbayar.
+
+
+## Foto anggota pada assignment — 20 Oktober 2026
+
+- Tim Departemen, daftar/detail PJ program serta papan/daftar/detail tugas menampilkan foto akun bersama nama; nama tidak diganti oleh foto saja. Sumber assignment UUID, bukan teks PIC lama.
+- Pengguna aktif (BPH/Staff) dapat melihat foto aktif anggota departemen. Foto tidak membuka akses program/tugas yang sebelumnya tidak diizinkan. Pengunjung tanpa login dan akun nonaktif tidak dapat meminta foto.
+- Hanya pemilik dapat mengunggah, mengganti dan menghapus. Foto kosong/gagal dimuat kembali ke inisial tanpa menghalangi data/tindakan. Foto lama yang bukan pointer terkini tidak dibagikan.

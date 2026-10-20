@@ -14,7 +14,7 @@ public class DataService {
   String criteria=ListQuery.filters(table,filters);
   if(table.equals("tasks")&&"mine".equals(filters.get("scope")))criteria+="&assignee_id=eq."+p.id;
   if(table.equals("profiles"))criteria+="&active=eq.true";
-  String fields=table.equals("profiles")?"id,name,role,active":table.equals("programs")?"*,program_assignees(profile_id)":"*";
+  String fields=table.equals("profiles")?"id,name,role,active,avatar_path":table.equals("programs")?"*,program_assignees(profile_id)":"*";
   String order=table.equals("events")?"start_date.asc,id.asc":"created_at.desc,id.asc";
   JsonNode rows=db.request(HttpMethod.GET,"/rest/v1/"+table+"?select="+fields+"&order="+order+"&limit="+(size+1)+"&offset="+((long)page*size)+criteria,p.token,null);
   if(rows==null||!rows.isArray())throw new ApiException(502,"DATABASE_UNAVAILABLE","Daftar tidak dapat dimuat.");

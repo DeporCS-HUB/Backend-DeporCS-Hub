@@ -69,3 +69,10 @@ Migration core dan events_profiles bertanggal 2026-10-08 menyiapkan schema, RLS,
 - Foto profil privat: crop preview, upload/ganti/hapus, avatar header, validasi/re-encode JPEG, pointer CAS dan cleanup objek versi lama.
 - Ganti password sendiri dengan verifikasi password saat ini dan sesi baru; tidak mengandalkan toggle current-password project. Error tidak menyebabkan logout/refresh loop; sukses membersihkan input.
 - Migration profile_avatars hanya menambah pointer/config bucket/RLS. Tidak mengganti akun/password/foto nyata, tidak menambah dependency/layanan berbayar.
+
+
+## 20 Oktober 2026 — Foto tim dan assignment
+
+- Foto akun ditampilkan bersama nama pada Tim Departemen, PJ program serta assignment papan/daftar/detail tugas dan ringkasan beban. Identitas berasal dari UUID akun.
+- API batch signed URLs dan policy baca foto terkini anggota aktif; bucket tetap private dan mutasi foto tetap owner-only.
+- Pembacaan direktori mengikuti invalidasi cache akun; fallback inisial dan refresh URL menghindari foto kosong menghalangi pekerjaan. Tidak menambah dependency aplikasi, reset akun atau layanan berbayar.

@@ -95,6 +95,7 @@ Urutan migration pada repository backend:
 4. `20261019042816_dashboard_coverage.sql`
 5. `20261019074232_program_hub_access.sql`
 6. `20261019100116_profile_avatars.sql`
+7. `20261020025834_team_avatar_read.sql`
 
 Jangan mengulang migration yang sudah tercatat. `supabase/seed.sql` adalah demo lama dan dapat menggandakan data bila diulang; bukan sumber dataset departemen. Harness dan fixture SQL hanya untuk database disposable. Dokumen ini tidak membawa password, UUID roster nyata, link bukti keuangan privat, atau salinan database.
 
@@ -112,12 +113,15 @@ Milestone: title 1–160 nonblank, due_date nullable, status Planned/Done. Note:
 Index baru meliputi task status/due_date dan program/tanggal serta creator pada agenda/catatan. task_summary menghitung seluruh hasil filter di database; daftar tetap paginated. Tidak ada pengisian persentase otomatis dari jumlah tugas.
 
 
-## Foto profil privat
+## Foto profil dalam bucket privat
 
 profiles.avatar_path nullable dibatasi ke `<profile UUID>/<object UUID>.jpg`. Update hanya diri sendiri melalui policy profile aktif yang sudah ada. Kolom role/active tetap tidak dapat ditulis client. Directory hanya mengembalikan field yang dipilih API; identity Auth/session dapat memuat pointer sendiri.
 
-Bucket depor-avatars: private, maksimal 524288 byte per objek, MIME image/jpeg. Empat policy storage.objects mencakup SELECT/INSERT/UPDATE/DELETE untuk authenticated dengan profile aktif dan nama folder UUID miliknya. BPH tidak mendapat bypass foto orang lain. Bytes diunggah/dihapus melalui Storage API dengan JWT pengguna; migration hanya membuat bucket/config/policies. storage.objects tidak dijadikan tempat menyimpan metadata file rekaan pada hosted.
+Bucket depor-avatars: private, maksimal 524288 byte per objek, MIME image/jpeg. Empat policy storage.objects mencakup SELECT/INSERT/UPDATE/DELETE untuk authenticated dengan profile aktif dan nama folder UUID miliknya. Policy SELECT tambahan 20 Oktober membolehkan pembaca aktif melihat hanya avatar_path terkini profile aktif. Policy INSERT/UPDATE/DELETE tetap hanya owner; BPH tidak mendapat bypass mutasi. Bytes diunggah/dihapus melalui Storage API dengan JWT pengguna; migration hanya membuat bucket/config/policies. storage.objects tidak dijadikan tempat menyimpan metadata file rekaan pada hosted.
 
 Tidak ada backfill foto atau perubahan password/akun saat migration. Fixture schema Storage pada tests/bootstrap.sql hanya stand-in lokal untuk policy, bukan Storage service. Signed URL berumur 900 detik dan dapat tetap berlaku sampai kedaluwarsa; bukan URL publik permanen. File versi lama dibersihkan setelah update pointer terkonfirmasi; request terputus dapat meninggalkan objek privat yatim untuk pemeriksaan operator.
 
 Status UI memakai Planning, On Going dan Finished; enum API/database lama dipertahankan. Active tetap satu kelompok dengan Ongoing. Tidak ada UPDATE massal status/audit/progres.
+
+
+Migrasi `team_avatar_read` menambah hanya policy SELECT `depor_avatar_department_read`. Predicate `(select private.app_role()) is not null` memverifikasi pembaca; subquery profile aktif membatasi nama objek pada pointer terkini. Bucket tetap private. Tidak ada backfill akun, assignment, path foto atau password; fixture metadata Storage hanya lokal disposable.
