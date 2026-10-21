@@ -132,3 +132,8 @@ Buka Program → Buka program → Tugas untuk menambah pekerjaan kecil di progra
 Deployment Vercel menggunakan /api relatif lewat rewrite ke backend yang sudah ada; build command mengesampingkan VITE_API_URL absolut lama. Tidak perlu key/env baru. Login ulang sekali mungkin diperlukan karena cookie lama tersimpan di host backend. Backend tetap memerlukan origin frontend yang persis, cookie secure, serta aturan Auth/RLS yang sama. Pengembangan lokal tetap memakai proxy Vite /api.
 
 Header memakai thumbnail private, panel dashboard heading h2, dan robots.txt valid. Performance gate kini juga memeriksa urutan heading, Accessibility 100 dan SEO 100 pada fixture. Laporan Lighthouse pengguna bukan hasil benchmark yang sama dengan CI; lihat frontend docs/lighthouse-feedback.md untuk sumber temuan dan batas verifikasi.
+
+
+## Program goals & agenda — 21 October 2026
+
+Open Program → Buka program → Goals & KPI for target vs actual, Agenda for WIB times/venue/certainty, and Timeline for dated source reconstruction. Targets/actuals can be edited by BPH/PJ. See [program goals and schedule](docs/program-goals-schedule.md).

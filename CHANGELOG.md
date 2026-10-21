@@ -99,3 +99,8 @@ Migration core dan events_profiles bertanggal 2026-10-08 menyiapkan schema, RLS,
 - Frontend Vercel memakai proxy /api pada origin web, dengan private/no-store dan origin checks tetap berlaku; sesi lama mungkin meminta login ulang sekali.
 - Header/Settings memakai JPEG thumbnail dari endpoint terautentikasi tanpa paid resize; foto tersimpan tidak dimodifikasi. Upload baru 256 px.
 - Gate Lighthouse bertambah pemeriksaan Accessibility/SEO/heading/robots dan tes browser proxy-cookie nyata dengan fixture. Peringatan minifikasi dari ekstensi Chrome dicatat sebagai faktor lingkungan.
+
+
+## Program goals & agenda — 21 October 2026
+
+- Added private program goals with evidence-backed measured actuals, timed WIB agenda/certainty, and source-labelled historical reconstruction. Existing stored program percentages are preserved. Public fixtures contain no uploaded operational content.

@@ -99,3 +99,8 @@ Data dashboard/program/board harus siap dalam median ≤2.5 s pada fixture mobil
 Hierarki pekerjaan: **Proker/UKOR → tugas kecil pelaksanaan**. Papan utama adalah rekap lintas program yang dapat diakses; tab Tugas pada ruang kerja program berisi tugas program itu saja. Setiap create dan full edit wajib memilih program induk, sementara dari ruang kerja program induk otomatis terkunci. Contoh judul tugas: konfirmasi lapangan atau siapkan formulir seleksi; tidak membuat program baru untuk tiap pekerjaan kecil.
 
 Tugas lama tanpa program tetap tersimpan, ditandai Perlu ditautkan, dan dapat difilter lalu ditautkan melalui editor. Program tidak ditebak dari judul. Status tugas lama masih dapat diperbarui secara parsial. Penautan tidak mengubah akses BPH/PJ dan assignment bukan sumber izin program. Persentase progres program tetap input eksplisit, tidak dihitung otomatis dari jumlah tugas.
+
+
+## Program goals & agenda — 21 October 2026
+
+BPH/PJ can review and edit Goals & KPI per program, including source, measurement window and observed values. Unknown is not zero. Agenda shows date/time/venue/certainty; reconstruction is labelled in Timeline. Percent program progress is not recomputed from imported evidence.

@@ -138,3 +138,8 @@ Migration performance_reads hanya membuat workspace_directory(), task_board(json
 Tugas baru memerlukan tasks.program_id yang menunjuk satu Proker/UKOR. Trigger invoker private.require_task_program menolak INSERT dengan program null serta UPDATE yang melepas relasi non-null menjadi null (23514). FK RESTRICT tetap melindungi program dengan tugas. Kolom masih nullable untuk mempertahankan record legacy tanpa backfill rekaan; perubahan status parsial legacy tetap diizinkan, sedangkan full update API mewajibkan induk.
 
 RLS program/tugas dan guard akun PJ yang sudah ada tidak diperluas. workspace_directory menambahkan kind pada opsi program. task_summary dan task_board menambahkan unlinked (jumlah program_id null sesuai filter/RLS), serta filter program_scope linked/unlinked. Status, riwayat, akun, password dan data bisnis tidak diubah oleh migration. Dashboard tetap menghitung semua tugas yang berhak dilihat, termasuk legacy sampai ditautkan.
+
+
+## Program goals & agenda — 21 October 2026
+
+program_goals stores explicit targets and nullable measured actuals with period/date/evidence; program access RLS applies. Imported program_notes retain source/occurred_on separately from created_at. Milestones store local WIB times and tentative/confirmed certainty. Private operational imports remain outside Git. See [data rules](docs/program-goals-schedule.md).

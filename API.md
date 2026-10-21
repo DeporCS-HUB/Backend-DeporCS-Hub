@@ -259,3 +259,8 @@ GET /tasks, /tasks/summary dan /tasks/board menerima program_scope kosong, linke
 GET /profiles/me/avatar menerima size opsional 96 atau 192. Tanpa size, kontrak signed URL 900 detik tetap tersedia. Dengan size, backend mengunduh hanya pointer milik caller yang baru diverifikasi menggunakan JWT/RLS, membatasi JPEG 512 KiB/dimensi 1024 sebelum decode, crop tengah lalu menghasilkan JPEG kecil dalam url berbentuk data:image/jpeg;base64. Tidak mengirim expiresIn untuk inline data. Ukuran lain 400; kosong available=false; path/userId/URL download tidak diterima dari client. Respons tetap no-store dan cache frontend tetap per akun; tidak menyimpan thumbnail atau mengubah foto asli di Storage. Foto baru dari browser diproses menjadi 256 px; batas upload API tetap kompatibel.
 
 Deployment Vercel frontend kini membangun VITE_API_URL=/api dan meneruskan /api/:path* ke backend yang sudah digunakan. API/auth tidak boleh masuk cache CDN. Origin/Authorization/Cookie/Set-Cookie tetap diteruskan; backend tetap memeriksa Origin allowlist serta Auth/profile/RLS. Cookie HttpOnly tanpa Domain menjadi milik host frontend saat lewat proxy. Sesi lama pada domain backend tidak dapat dipindahkan otomatis; pengguna mungkin perlu login ulang sekali. Tidak memakai cookie non-HttpOnly atau localStorage token.
+
+
+## Program goals & agenda — 21 October 2026
+
+Program goals use GET/POST /programs/:id/goals and PUT/DELETE /programs/:id/goals/:goalId. Milestones add WIB local times, venue, certainty, source and Cancelled status. See [contract](docs/program-goals-schedule.md).
