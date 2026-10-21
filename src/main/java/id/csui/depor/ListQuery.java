@@ -26,7 +26,7 @@ final class ListQuery {
   if(table.equals("programs"))allowed.add("kind");
   if(table.equals("tasks"))allowed.addAll(List.of("priority","program_id","assignee_id","scope","program_scope"));
   if(table.equals("events"))allowed.add("permit_status");
-  if(table.equals("finances"))allowed.add("type");
+  if(table.equals("finances"))allowed.addAll(List.of("type","reimbursement_status"));
   if(table.equals("profiles"))allowed.add("departmentRole");
   if(!allowed.containsAll(input.keySet()))throw invalid();
   StringBuilder result=new StringBuilder();
@@ -44,6 +44,7 @@ final class ListQuery {
   if(table.equals("tasks"))equal(result,input,"priority",Set.of("Low","Medium","High"));
   if(table.equals("events"))equal(result,input,"permit_status",Set.of("Not required","Pending","Approved","Rejected"));
   if(table.equals("finances"))equal(result,input,"type",Set.of("income","expense"));
+  if(table.equals("finances"))equal(result,input,"reimbursement_status",Set.of("unknown","not_requested","pending","paid","not_required"));
   String role=input.getOrDefault("departmentRole","");
   if(table.equals("profiles")&&!role.isBlank()) {
    if(!Set.of("bph","staff").contains(role))throw invalid();

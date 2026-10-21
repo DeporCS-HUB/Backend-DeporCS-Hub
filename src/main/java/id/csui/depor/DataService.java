@@ -29,6 +29,11 @@ public class DataService {
   if(!task&&!p.manages()) throw new ApiException(403,"FORBIDDEN","Hanya BPH yang dapat mengelola data ini.");
   if(id!=null) authorize(table,id,p);
   ObjectNode payload=mapper.valueToTree(input);
+  if(table.equals("finances")) {
+   var extras=java.util.List.of("record_kind","reimbursement_status","notes","source_ref");
+   if(extras.stream().noneMatch(payload::hasNonNull))payload.remove(extras);
+   else for(String key:java.util.List.of("record_kind","reimbursement_status"))if(!payload.hasNonNull(key))payload.remove(key);
+  }
   if(table.equals("programs")) {
    ObjectNode rpc=mapper.createObjectNode();if(id==null) rpc.putNull("p_id");else rpc.put("p_id",id.toString());rpc.set("p_payload",payload);
    JsonNode result=db.request(HttpMethod.POST,"/rest/v1/rpc/save_program",p.token,rpc);
