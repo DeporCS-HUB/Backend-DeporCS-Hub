@@ -143,3 +143,8 @@ RLS program/tugas dan guard akun PJ yang sudah ada tidak diperluas. workspace_di
 ## Program goals & agenda — 21 October 2026
 
 program_goals stores explicit targets and nullable measured actuals with period/date/evidence; program access RLS applies. Imported program_notes retain source/occurred_on separately from created_at. Milestones store local WIB times and tentative/confirmed certainty. Private operational imports remain outside Git. See [data rules](docs/program-goals-schedule.md).
+
+
+## Finance records and reimbursement — 22 October 2026
+
+Finance supports record_kind (transaction, funding_request, reimbursement_request), reimbursement_status (unknown, not_requested, pending, paid, not_required), notes (2000 chars), and source_ref (300 chars). Approval status remains pending/approved/rejected and is independent of reimbursement. Unknown transaction dates stay null. Only a transaction with a known date may be approved and counted by existing dashboard totals. A payment to a merchant is not evidence that the department reimbursed the purchaser. Requests should be reconciled with their underlying transaction before conversion to avoid duplicate expenses. No source data or bank details belong in this public repository.

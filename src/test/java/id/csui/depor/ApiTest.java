@@ -41,6 +41,25 @@ class ApiTest {
  @Test void memberCannotChangeOthersTask() throws Exception {when(db.request(eq(HttpMethod.GET),contains("/rest/v1/tasks?id=eq."),eq("member-token"),isNull())).thenReturn(mapper.readTree("[{\"created_by\":\""+other+"\",\"assignee_id\":\""+other+"\"}]"));mvc.perform(put("/api/tasks/"+row).header("Authorization","Bearer member-token").contentType(MediaType.APPLICATION_JSON).content(task("null"))).andExpect(status().isForbidden());verify(db,never()).request(eq(HttpMethod.PATCH),any(),any(),any());}
  @Test void ownedTaskStatusCanPersist() throws Exception {when(db.request(eq(HttpMethod.GET),contains("/rest/v1/tasks?id=eq."),eq("member-token"),isNull())).thenReturn(mapper.readTree("[{\"created_by\":\""+uid+"\"}]"));when(db.request(eq(HttpMethod.PATCH),any(),eq("member-token"),any())).thenReturn(mapper.readTree("[{\"status\":\"Done\"}]"));mvc.perform(put("/api/tasks/"+row).header("Authorization","Bearer member-token").contentType(MediaType.APPLICATION_JSON).content(task("null").replace("To Do","Done"))).andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("Done"));}
  @Test void zeroFinanceRejected() throws Exception {mvc.perform(post("/api/finances").header("Authorization","Bearer staff-token").contentType(MediaType.APPLICATION_JSON).content("{\"description\":\"Equipment\",\"type\":\"expense\",\"amount\":0,\"category\":\"Sports\",\"transaction_date\":\"2026-10-08\",\"status\":\"approved\"}")).andExpect(status().isBadRequest());}
+
+ String financeRequest(){return "{\"description\":\"Fixture reimbursement\",\"type\":\"expense\",\"amount\":12345,\"category\":\"Equipment\",\"transaction_date\":null,\"status\":\"pending\",\"record_kind\":\"reimbursement_request\",\"reimbursement_status\":\"pending\",\"notes\":\"Awaiting receipt\",\"source_ref\":\"Fixture source\"}";}
+ @Test void pendingFinanceAllowsUnknownDateAndPreservesReimburseFields() throws Exception {
+  when(db.request(eq(HttpMethod.POST),eq("/rest/v1/finances"),eq("staff-token"),any())).thenReturn(mapper.readTree("[{\"id\":\""+row+"\"}]"));
+  mvc.perform(post("/api/finances").header("Authorization","Bearer staff-token").contentType(MediaType.APPLICATION_JSON).content(financeRequest())).andExpect(status().isCreated());
+  var capture=org.mockito.ArgumentCaptor.forClass(Object.class);verify(db).request(eq(HttpMethod.POST),eq("/rest/v1/finances"),eq("staff-token"),capture.capture());JsonNode body=(JsonNode)capture.getValue();
+  assertTrue(body.path("transaction_date").isNull());assertEquals("pending",body.path("reimbursement_status").asText());assertEquals("reimbursement_request",body.path("record_kind").asText());assertFalse(body.has("approvalValid"));
+ }
+ @Test void financeRequestCannotBeApprovedAsSpending() throws Exception {
+  mvc.perform(post("/api/finances").header("Authorization","Bearer staff-token").contentType(MediaType.APPLICATION_JSON).content(financeRequest().replace("\"status\":\"pending\"","\"status\":\"approved\""))).andExpect(status().isBadRequest());
+  verify(db,never()).request(eq(HttpMethod.POST),any(),any(),any());
+ }
+ @Test void legacyFinanceEditDoesNotEraseReimburseMetadata() throws Exception {
+  when(db.request(eq(HttpMethod.GET),contains("/rest/v1/finances?id=eq."),eq("staff-token"),isNull())).thenReturn(mapper.readTree("[{\"id\":\""+row+"\"}]"));
+  when(db.request(eq(HttpMethod.PATCH),any(),eq("staff-token"),any())).thenReturn(mapper.readTree("[{\"id\":\""+row+"\"}]"));
+  String legacy="{\"description\":\"Fixture\",\"type\":\"expense\",\"amount\":12345,\"category\":\"Equipment\",\"transaction_date\":\"2026-10-08\",\"status\":\"pending\"}";
+  mvc.perform(put("/api/finances/"+row).header("Authorization","Bearer staff-token").contentType(MediaType.APPLICATION_JSON).content(legacy)).andExpect(status().isOk());
+  var capture=org.mockito.ArgumentCaptor.forClass(Object.class);verify(db).request(eq(HttpMethod.PATCH),any(),eq("staff-token"),capture.capture());JsonNode body=(JsonNode)capture.getValue();assertFalse(body.has("reimbursement_status"));assertFalse(body.has("notes"));
+ }
  @Test void negativeInventoryRejected() throws Exception {mvc.perform(post("/api/inventory").header("Authorization","Bearer staff-token").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Ball\",\"category\":\"Equipment\",\"quantity\":-1,\"status\":\"Available\",\"condition\":\"Baik\"}")).andExpect(status().isBadRequest());}
  @Test void invalidPaginationRejected() throws Exception {mvc.perform(get("/api/programs?size=101").header("Authorization","Bearer staff-token")).andExpect(status().isBadRequest());}
  @Test void nonexistentDeleteDoesNotReportSuccess() throws Exception {when(db.request(eq(HttpMethod.GET),contains("/rest/v1/inventory?id=eq."),eq("staff-token"),isNull())).thenReturn(mapper.readTree("[]"));mvc.perform(delete("/api/inventory/"+row).header("Authorization","Bearer staff-token")).andExpect(status().isNotFound());verify(db,never()).request(eq(HttpMethod.DELETE),any(),any(),any());}

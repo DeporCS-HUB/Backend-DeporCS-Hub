@@ -104,3 +104,8 @@ Migration core dan events_profiles bertanggal 2026-10-08 menyiapkan schema, RLS,
 ## Program goals & agenda — 21 October 2026
 
 - Added private program goals with evidence-backed measured actuals, timed WIB agenda/certainty, and source-labelled historical reconstruction. Existing stored program percentages are preserved. Public fixtures contain no uploaded operational content.
+
+
+## 22 October 2026 — Finance reimbursement tracking
+
+Separate reimbursement from approval, retain unknown dates, distinguish requests from transactions, and expose compact detail notes with source references. BPH can edit the new fields; existing program/PJ read scope remains enforced. Requests cannot enter approved spending. Generic fixtures cover validation, compatibility with legacy clients, RLS and schema rollback.
