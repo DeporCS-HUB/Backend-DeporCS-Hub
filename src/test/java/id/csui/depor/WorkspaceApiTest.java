@@ -40,6 +40,12 @@ class WorkspaceApiTest {
   program(true);when(db.request(eq(HttpMethod.DELETE),contains("program_milestones?program_id=eq."),eq("pj-token"),isNull())).thenReturn(mapper.readTree("[]"));
   mvc.perform(delete("/api/programs/"+pid+"/milestones/"+mid).header("Authorization","Bearer pj-token")).andExpect(status().isNotFound());
  }
+ @Test void legacyAgendaToggleDoesNotEraseTimesOrSource()throws Exception{
+  program(true);when(db.request(eq(HttpMethod.PATCH),contains("program_milestones?program_id=eq."),eq("pj-token"),any())).thenReturn(mapper.readTree("[{\"id\":\""+mid+"\"}]"));
+  mvc.perform(put("/api/programs/"+pid+"/milestones/"+mid).header("Authorization","Bearer pj-token").contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"Fixture\",\"due_date\":\"2026-10-28\",\"status\":\"Done\"}")).andExpect(status().isOk());
+  var c=org.mockito.ArgumentCaptor.forClass(Object.class);verify(db).request(eq(HttpMethod.PATCH),any(),eq("pj-token"),c.capture());JsonNode payload=(JsonNode)c.getValue();
+  assertFalse(payload.has("start_time"));assertFalse(payload.has("schedule_status"));assertFalse(payload.has("source_ref"));
+ }
  @Test void taskStatusIsPartialAndRejectsStaleWrite()throws Exception{
   when(db.request(eq(HttpMethod.GET),contains("/rest/v1/tasks?id=eq."),eq("pj-token"),isNull())).thenReturn(mapper.readTree("[{\"id\":\""+mid+"\",\"assignee_id\":\""+uid+"\"}]"));
   when(db.request(eq(HttpMethod.PATCH),contains("&updated_at=eq.2026-10-19T01%3A00%3A00Z"),eq("pj-token"),any())).thenReturn(mapper.readTree("[]"));

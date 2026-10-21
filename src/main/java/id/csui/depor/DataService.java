@@ -109,7 +109,12 @@ public class DataService {
   program(programId,p);
   String path="/rest/v1/"+table+(id==null?"":"?program_id=eq."+programId+"&id=eq."+id);
   ObjectNode payload=mapper.valueToTree(input);
-  if(table.equals("program_milestones")&&!payload.hasNonNull("schedule_status"))payload.put("schedule_status","Tentative");
+  if(table.equals("program_milestones")) {
+   var extras=java.util.List.of("start_time","end_time","venue","description","schedule_status","source_ref");
+   boolean legacyUpdate=id!=null&&extras.stream().noneMatch(payload::hasNonNull);
+   if(legacyUpdate)payload.remove(extras);
+   else if(!payload.hasNonNull("schedule_status"))payload.put("schedule_status","Tentative");
+  }
   if(id==null){payload.put("program_id",programId.toString());payload.put("created_by",p.id.toString());}
   JsonNode rows=db.request(delete?HttpMethod.DELETE:id==null?HttpMethod.POST:HttpMethod.PATCH,path,p.token,delete?null:payload);
   if(!rows.isArray()||rows.size()!=1)throw new ApiException(404,"NOT_FOUND","Data tidak ditemukan atau sudah berubah.");return rows.get(0);
