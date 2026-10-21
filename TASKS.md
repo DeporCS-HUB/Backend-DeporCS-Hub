@@ -108,3 +108,9 @@ Bukti validasi dan rilis dicatat pada PR perubahan ini; jumlah tes historis tida
 - [x] Thumbnail header private 96 px/Settings 192 px, tanpa paid image transformation atau rewrite foto asli.
 - [x] Tambahkan audit kualitas halaman ke performance gate; catat hasil akhir pada PR.
 - [ ] Audit ulang dashboard dengan sesi pengguna nyata dan ekstensi Chrome dimatikan; CI memakai fixture, bukan akun hosted pengguna.
+
+
+## Program goals & agenda — 21 October 2026
+
+- [x] Editable private program goals, nullable measured actuals, timed agenda and explicit reconstruction provenance.
+- [ ] Full attendance and survey records; dated historical measurement series; subsequent official schedule revisions.

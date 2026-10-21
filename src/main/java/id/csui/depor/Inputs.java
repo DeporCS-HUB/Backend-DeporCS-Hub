@@ -15,7 +15,24 @@ public class Inputs {
  }
  public record ProgramProgress(@NotBlank @Pattern(regexp="Planning|Ongoing|Active|Completed|Cancelled|Unspecified") String status,@Min(0) @Max(100) Integer progress,@Size(max=2000) String progress_notes) {}
  public record Note(@NotBlank @Size(max=2000) String body) {}
- public record Milestone(@NotBlank @Size(max=160) String title,LocalDate due_date,@NotBlank @Pattern(regexp="Planned|Done") String status) {}
+ public record Milestone(@NotBlank @Size(max=160) String title,LocalDate due_date,@NotBlank @Pattern(regexp="Planned|Done|Cancelled") String status,
+  java.time.LocalTime start_time,java.time.LocalTime end_time,@Size(max=160) String venue,@Size(max=2000) String description,
+  @Pattern(regexp="Confirmed|Tentative") String schedule_status,@Size(max=300) String source_ref) {
+  @com.fasterxml.jackson.annotation.JsonIgnore @AssertTrue public boolean isTimeRangeValid(){return (end_time==null||start_time!=null&&end_time.isAfter(start_time))&&(start_time==null||due_date!=null);}
+ }
+ public record Goal(@NotBlank @Size(max=400) String title,@NotBlank @Pattern(regexp="count|percent|boolean") String metric_type,
+  @NotNull @DecimalMin(value="0",inclusive=false) @Digits(integer=9,fraction=2) BigDecimal target_value,
+  @DecimalMin("0") @Digits(integer=9,fraction=2) BigDecimal actual_value,
+  @NotBlank @Size(max=40) String unit,@NotBlank @Size(max=120) String target_period,
+  @Size(max=120) String measurement_period,LocalDate measured_on,@Size(max=1000) String evidence,@Size(max=300) String source_ref) {
+  @com.fasterxml.jackson.annotation.JsonIgnore @AssertTrue public boolean isMeasurementValid(){
+   if(target_value==null)return true;
+   if("percent".equals(metric_type)&&(target_value.compareTo(BigDecimal.valueOf(100))>0||actual_value!=null&&actual_value.compareTo(BigDecimal.valueOf(100))>0))return false;
+   if("boolean".equals(metric_type)&&(target_value.compareTo(BigDecimal.ONE)!=0||actual_value!=null&&actual_value.compareTo(BigDecimal.ZERO)!=0&&actual_value.compareTo(BigDecimal.ONE)!=0))return false;
+   if("count".equals(metric_type)&&(target_value.stripTrailingZeros().scale()>0||actual_value!=null&&actual_value.stripTrailingZeros().scale()>0))return false;
+   return actual_value==null||measured_on!=null&&measurement_period!=null&&!measurement_period.isBlank()&&evidence!=null&&!evidence.isBlank();
+  }
+ }
  public record TaskStatus(@NotBlank @Pattern(regexp="Backlog|To Do|In Progress|Review|Done") String status,java.time.Instant expected_updated_at) {}
  public record Task(@NotBlank @Size(max=160) String title,@Size(max=2000) String description,@NotNull(message="Pilih Proker/UKOR untuk tugas ini.") UUID program_id,UUID assignee_id,@NotBlank @Pattern(regexp="Backlog|To Do|In Progress|Review|Done") String status,@NotBlank @Pattern(regexp="Low|Medium|High") String priority,LocalDate due_date) {}
  public record Finance(@NotBlank @Size(max=200) String description,UUID program_id,@NotBlank @Pattern(regexp="income|expense") String type,@NotNull @DecimalMin(value="0",inclusive=false) @Digits(integer=13,fraction=2) BigDecimal amount,@NotBlank @Size(max=80) String category,@NotNull LocalDate transaction_date,@NotBlank @Pattern(regexp="pending|approved|rejected") String status) {}

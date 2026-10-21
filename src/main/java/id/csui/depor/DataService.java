@@ -94,15 +94,22 @@ public class DataService {
  }
  public Page milestones(UUID id,int page,int size,String status,Principal p) {
   program(id,p);if(page<0||page>100000||size<1||size>100)throw new ApiException(400,"VALIDATION_ERROR","Pagination tidak valid.");
-  if(!java.util.Set.of("","Planned","Done").contains(status))throw new ApiException(400,"VALIDATION_ERROR","Status agenda tidak valid.");
-  JsonNode rows=db.request(HttpMethod.GET,"/rest/v1/program_milestones?program_id=eq."+id+"&order=due_date.asc.nullslast,id.asc&limit="+(size+1)+"&offset="+((long)page*size)+(status.isEmpty()?"":"&status=eq."+status),p.token,null);
+  if(!java.util.Set.of("","Planned","Done","Cancelled").contains(status))throw new ApiException(400,"VALIDATION_ERROR","Status agenda tidak valid.");
+  JsonNode rows=db.request(HttpMethod.GET,"/rest/v1/program_milestones?program_id=eq."+id+"&order=due_date.asc.nullslast,start_time.asc.nullslast,id.asc&limit="+(size+1)+"&offset="+((long)page*size)+(status.isEmpty()?"":"&status=eq."+status),p.token,null);
   if(!rows.isArray())throw new ApiException(502,"DATABASE_UNAVAILABLE","Agenda tidak dapat dimuat.");
+  var items=mapper.createArrayNode();for(int i=0;i<Math.min(size,rows.size());i++)items.add(rows.get(i));return new Page(items,rows.size()>size);
+ }
+ public Page goals(UUID id,int page,int size,Principal p) {
+  program(id,p);if(page<0||page>100000||size<1||size>100)throw new ApiException(400,"VALIDATION_ERROR","Pagination tidak valid.");
+  JsonNode rows=db.request(HttpMethod.GET,"/rest/v1/program_goals?program_id=eq."+id+"&order=created_at.asc,id.asc&limit="+(size+1)+"&offset="+((long)page*size),p.token,null);
+  if(!rows.isArray())throw new ApiException(502,"DATABASE_UNAVAILABLE","Goals tidak dapat dimuat.");
   var items=mapper.createArrayNode();for(int i=0;i<Math.min(size,rows.size());i++)items.add(rows.get(i));return new Page(items,rows.size()>size);
  }
  public JsonNode workspaceWrite(String table,UUID programId,UUID id,Object input,Principal p,boolean delete) {
   program(programId,p);
   String path="/rest/v1/"+table+(id==null?"":"?program_id=eq."+programId+"&id=eq."+id);
   ObjectNode payload=mapper.valueToTree(input);
+  if(table.equals("program_milestones")&&!payload.hasNonNull("schedule_status"))payload.put("schedule_status","Tentative");
   if(id==null){payload.put("program_id",programId.toString());payload.put("created_by",p.id.toString());}
   JsonNode rows=db.request(delete?HttpMethod.DELETE:id==null?HttpMethod.POST:HttpMethod.PATCH,path,p.token,delete?null:payload);
   if(!rows.isArray()||rows.size()!=1)throw new ApiException(404,"NOT_FOUND","Data tidak ditemukan atau sudah berubah.");return rows.get(0);

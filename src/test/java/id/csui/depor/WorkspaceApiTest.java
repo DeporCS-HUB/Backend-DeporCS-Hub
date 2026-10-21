@@ -56,4 +56,31 @@ class WorkspaceApiTest {
   mvc.perform(get("/api/tasks").param("scope","mine").header("Authorization","Bearer pj-token")).andExpect(status().isOk());
   verify(db).request(eq(HttpMethod.GET),contains("&assignee_id=eq."+uid),eq("pj-token"),isNull());
  }
+
+ @Test void goalUsesCallerScopeAndRejectsUnverifiableActuals()throws Exception{
+  program(true);when(db.request(eq(HttpMethod.POST),eq("/rest/v1/program_goals"),eq("pj-token"),any())).thenReturn(mapper.readTree("[{\"id\":\""+mid+"\"}]"));
+  String base="{\"title\":\"Weekly sessions\",\"metric_type\":\"count\",\"target_value\":1,\"unit\":\"sesi\",\"target_period\":\"Per minggu\"";
+  mvc.perform(post("/api/programs/"+pid+"/goals").header("Authorization","Bearer pj-token").contentType(MediaType.APPLICATION_JSON).content(base+"}")).andExpect(status().isCreated());
+  mvc.perform(post("/api/programs/"+pid+"/goals").header("Authorization","Bearer pj-token").contentType(MediaType.APPLICATION_JSON).content(base+",\"actual_value\":0}")).andExpect(status().isBadRequest());
+  mvc.perform(post("/api/programs/"+pid+"/goals").header("Authorization","Bearer pj-token").contentType(MediaType.APPLICATION_JSON).content(base+",\"actual_value\":0,\"measurement_period\":\"Week 1\",\"measured_on\":\"2026-10-21\",\"evidence\":\"Verified no session this week\"}")).andExpect(status().isCreated());
+  var c=org.mockito.ArgumentCaptor.forClass(Object.class);verify(db,times(2)).request(eq(HttpMethod.POST),eq("/rest/v1/program_goals"),eq("pj-token"),c.capture());
+  assertEquals(pid,((JsonNode)c.getValue()).path("program_id").asText());assertEquals(uid,((JsonNode)c.getValue()).path("created_by").asText());
+ }
+ @Test void inaccessibleGoalNeverReachesChildTable()throws Exception{
+  program(false);mvc.perform(get("/api/programs/"+pid+"/goals").header("Authorization","Bearer pj-token")).andExpect(status().isNotFound());
+  verify(db,never()).request(eq(HttpMethod.GET),contains("program_goals?"),any(),any());
+ }
+ @Test void goalsRejectInvalidUnitsAndUnknownImportFields()throws Exception{
+  String invalid="{\"title\":\"Satisfaction\",\"metric_type\":\"percent\",\"target_value\":101,\"unit\":\"%\",\"target_period\":\"Annual\"}";
+  mvc.perform(post("/api/programs/"+pid+"/goals").header("Authorization","Bearer pj-token").contentType(MediaType.APPLICATION_JSON).content(invalid)).andExpect(status().isBadRequest());
+  mvc.perform(post("/api/programs/"+pid+"/goals").header("Authorization","Bearer pj-token").contentType(MediaType.APPLICATION_JSON).content(invalid.replace("101","85").replace("Annual","Annual").replace("}",",\"source_key\":\"spoof\"}"))).andExpect(status().isBadRequest());
+  verify(db,never()).request(any(),any(),any(),any());
+ }
+ @Test void timedAgendaPreservesLocalTimesAndRejectsMissingDateOrReverseRange()throws Exception{
+  program(true);when(db.request(eq(HttpMethod.POST),eq("/rest/v1/program_milestones"),eq("pj-token"),any())).thenReturn(mapper.readTree("[{\"id\":\""+mid+"\"}]"));
+  String body="{\"title\":\"Fixture match\",\"due_date\":\"2026-10-28\",\"start_time\":\"18:30\",\"end_time\":\"19:30\",\"status\":\"Planned\",\"schedule_status\":\"Tentative\",\"description\":\"Await revised slot\"}";
+  mvc.perform(post("/api/programs/"+pid+"/milestones").header("Authorization","Bearer pj-token").contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isCreated());
+  mvc.perform(post("/api/programs/"+pid+"/milestones").header("Authorization","Bearer pj-token").contentType(MediaType.APPLICATION_JSON).content(body.replace("19:30","17:30"))).andExpect(status().isBadRequest());
+  mvc.perform(post("/api/programs/"+pid+"/milestones").header("Authorization","Bearer pj-token").contentType(MediaType.APPLICATION_JSON).content(body.replace("\"due_date\":\"2026-10-28\",", ""))).andExpect(status().isBadRequest());
+ }
 }
