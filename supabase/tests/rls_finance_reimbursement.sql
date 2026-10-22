@@ -20,8 +20,11 @@ do $$begin
  update public.finances set reimbursement_status='paid';
  if (public.dashboard_stats()->'summary'->>'expense')::numeric<>0 then raise exception 'reimburse implied approval';end if;
  update public.finances set record_kind='transaction';
- begin update public.finances set status='approved';raise exception 'undated actual approved';exception when check_violation then null;end;
- update public.finances set transaction_date=current_date,status='approved';
+ update public.finances set status='approved';
+ if (select transaction_date from public.finances) is not null then raise exception 'approval fabricated date';end if;
+ if (public.dashboard_stats()->'summary'->>'expense')::numeric<>12345 then raise exception 'undated approved actual missing';end if;
+ if exists(select 1 from jsonb_array_elements(public.dashboard_stats()->'monthly') m where (m->>'expense')::numeric<>0) then raise exception 'undated actual assigned to invented month';end if;
+ update public.finances set transaction_date=current_date;
  if (public.dashboard_stats()->'summary'->>'expense')::numeric<>12345 then raise exception 'approved transaction missing';end if;
 end$$;
 set local request.jwt.claim.sub='98000000-0000-0000-0000-000000000002';
@@ -37,6 +40,9 @@ do $$begin begin perform * from public.finances;raise exception 'anon read finan
 reset role;
 -- Rehearse the prior schema only after removing fixture-only data.
 delete from public.finances where program_id=current_setting('test.finance_program')::uuid;
+alter table public.finances drop constraint finance_approved_transaction;
+-- Restore the stricter previous constraint as a rollback rehearsal.
+alter table public.finances add constraint finance_approved_transaction check(status<>'approved' or (record_kind='transaction' and transaction_date is not null));
 alter table public.finances drop constraint finance_approved_transaction,
  drop column record_kind,drop column reimbursement_status,drop column notes,drop column source_ref,
  alter column transaction_date set not null;

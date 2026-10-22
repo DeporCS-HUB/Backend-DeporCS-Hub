@@ -49,6 +49,12 @@ class ApiTest {
   var capture=org.mockito.ArgumentCaptor.forClass(Object.class);verify(db).request(eq(HttpMethod.POST),eq("/rest/v1/finances"),eq("staff-token"),capture.capture());JsonNode body=(JsonNode)capture.getValue();
   assertTrue(body.path("transaction_date").isNull());assertEquals("pending",body.path("reimbursement_status").asText());assertEquals("reimbursement_request",body.path("record_kind").asText());assertFalse(body.has("approvalValid"));
  }
+ @Test void approvedTransactionAllowsUnknownDateWithoutInferringReimbursement() throws Exception {
+  when(db.request(eq(HttpMethod.POST),eq("/rest/v1/finances"),eq("staff-token"),any())).thenReturn(mapper.readTree("[{\"id\":\""+row+"\"}]"));
+  String actual=financeRequest().replace("reimbursement_request","transaction").replace("\"status\":\"pending\"","\"status\":\"approved\"");
+  mvc.perform(post("/api/finances").header("Authorization","Bearer staff-token").contentType(MediaType.APPLICATION_JSON).content(actual)).andExpect(status().isCreated());
+  var capture=org.mockito.ArgumentCaptor.forClass(Object.class);verify(db).request(eq(HttpMethod.POST),eq("/rest/v1/finances"),eq("staff-token"),capture.capture());JsonNode body=(JsonNode)capture.getValue();assertTrue(body.path("transaction_date").isNull());assertEquals("pending",body.path("reimbursement_status").asText());assertEquals("approved",body.path("status").asText());
+ }
  @Test void financeRequestCannotBeApprovedAsSpending() throws Exception {
   mvc.perform(post("/api/finances").header("Authorization","Bearer staff-token").contentType(MediaType.APPLICATION_JSON).content(financeRequest().replace("\"status\":\"pending\"","\"status\":\"approved\""))).andExpect(status().isBadRequest());
   verify(db,never()).request(eq(HttpMethod.POST),any(),any(),any());
