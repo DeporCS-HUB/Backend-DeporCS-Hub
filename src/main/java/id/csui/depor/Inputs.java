@@ -39,7 +39,7 @@ public class Inputs {
   @Pattern(regexp="transaction|funding_request|reimbursement_request") String record_kind,
   @Pattern(regexp="unknown|not_requested|pending|paid|not_required") String reimbursement_status,
   @Size(max=2000) String notes,@Size(max=300) String source_ref) {
-  @com.fasterxml.jackson.annotation.JsonIgnore @AssertTrue public boolean isApprovalValid(){return !"approved".equals(status)||transaction_date!=null&&(record_kind==null||"transaction".equals(record_kind));}
+  @com.fasterxml.jackson.annotation.JsonIgnore @AssertTrue public boolean isApprovalValid(){return !"approved".equals(status)||record_kind==null||"transaction".equals(record_kind);}
  }
  public record Inventory(@NotBlank @Size(max=160) String name,@NotBlank @Size(max=80) String category,@NotNull @Min(0) @Max(1000000) Integer quantity,@NotBlank @Pattern(regexp="Available|Borrowed|Maintenance|Lost") String status,@NotBlank @Pattern(regexp="Baik|Perawatan|Rusak") String condition,@Size(max=16) String emoji,@Size(max=160) String location) {}
 }

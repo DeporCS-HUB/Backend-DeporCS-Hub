@@ -175,6 +175,6 @@ Validation: frontend lint, 30 unit tests, production build and 53 mock-browser f
 
 ## 22 October 2026 — Finance reimbursement records
 
-Migration finance_reimbursement_records adds optional notes/source, record kind, reimbursement status, and nullable transaction date. Existing RLS remains; grants allow BPH updates only through existing policies. Approval and reimbursement are independent. Requests need conversion to a dated transaction before approval. API preserves added metadata during edits by older clients. UI shows reimbursement, server filter, and source notes in a bounded Detail dialog. Never put imported departmental data or bank details in these public repos.
+Migration finance_reimbursement_records adds optional notes/source, record kind, reimbursement status, and nullable transaction date. Existing RLS remains; grants allow BPH updates only through existing policies. Approval and reimbursement are independent. Requests need conversion to a confirmed transaction before approval. A confirmed transaction may be approved with its date still unknown; monthly charts only include dated transactions. API preserves added metadata during edits by older clients. UI shows reimbursement, server filter, and source notes in a bounded Detail dialog. Never put imported departmental data or bank details in these public repos.
 
 Validation: frontend lint/unit/build locally; Java 21, full browser/performance, and disposable PostgreSQL/RLS/rollback checks run in the existing CI before merge. Hosted verification is separate from these fixture checks.

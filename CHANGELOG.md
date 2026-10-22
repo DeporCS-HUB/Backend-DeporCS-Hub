@@ -109,3 +109,8 @@ Migration core dan events_profiles bertanggal 2026-10-08 menyiapkan schema, RLS,
 ## 22 October 2026 — Finance reimbursement tracking
 
 Separate reimbursement from approval, retain unknown dates, distinguish requests from transactions, and expose compact detail notes with source references. BPH can edit the new fields; existing program/PJ read scope remains enforced. Requests cannot enter approved spending. Generic fixtures cover validation, compatibility with legacy clients, RLS and schema rollback.
+
+
+## 22 October 2026 — Approval with unknown historical dates
+
+Allow BPH to approve a confirmed transaction while keeping an unknown date null. Totals include it; monthly charts only show dated records. Approval still does not imply reimbursement, and requests still require confirmation as transactions. The data cache remains 30 seconds.
